@@ -2,13 +2,13 @@
 // the bill story, the chat, the light on the feature tiles and the pause button. Every amount and name is invented (content.ts).
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, Eye, FileUp, KeyRound, Landmark, Lock, Plug, Trash2 } from "lucide-react";
+import { Bell, Eye, FileUp, KeyRound, Landmark, Lock, Plug, Plus, Trash2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import shot from "./img/inicio-celular.png";
 import { BentoGlow } from "./bento-glow";
 import { BillStory } from "./bill-story";
 import { ChatDemo } from "./chat-demo";
-import { ARCHITECTURE_URL, DEMO_URL, GITHUB_PROFILE_URL, LINKEDIN_URL, README_URL, REPO_URL, SCREENS, TESTS } from "./content";
+import { ARCHITECTURE_URL, DEMO_URL, FAQ, GITHUB_PROFILE_URL, LINKEDIN_URL, README_URL, REPO_URL, SCREENS, TESTS, WHY } from "./content";
 import { MotionToggle } from "./motion-toggle";
 import { Tilt } from "./tilt";
 
@@ -38,8 +38,8 @@ function Rosette({ priority = false }: { priority?: boolean }) {
   );
 }
 
-function Count({ to, from = 0, digits }: { to: number; from?: number; digits: number }) {
-  return <span className="lp-count" aria-hidden style={{ "--to": to, "--from": from, "--digits": digits } as React.CSSProperties} />;
+function Count({ to, from = 0, digits, suffix = "" }: { to: number; from?: number; digits: number; suffix?: string }) {
+  return <span className="lp-count" aria-hidden style={{ "--to": to, "--from": from, "--digits": digits, "--suffix": JSON.stringify(suffix) } as React.CSSProperties} />;
 }
 
 function Hero() {
@@ -97,27 +97,23 @@ function Hero() {
           <div className="lp-stats">
             <p className="lp-stat">
               <span className="lp-stat-value">
-                <Count to={TOTAL_TESTS} digits={3} />
-              </span>
-              <span className="lp-stat-label">
-                <span className="sr-only">{TOTAL_TESTS} </span>testes automatizados
-              </span>
-            </p>
-            <p className="lp-stat">
-              <span className="lp-stat-value">
-                <Count to={SCREENS} digits={2} />
-              </span>
-              <span className="lp-stat-label">
-                <span className="sr-only">{SCREENS} </span>telas no app, do celular ao computador
-              </span>
-            </p>
-            <p className="lp-stat">
-              <span className="lp-stat-value">
                 <Count to={0} from={9} digits={1} />
               </span>
               <span className="lp-stat-label">
                 <span className="sr-only">0 </span>senhas de banco guardadas
               </span>
+            </p>
+            <p className="lp-stat">
+              <span className="lp-stat-value">
+                <Count to={100} digits={4} suffix="%" />
+              </span>
+              <span className="lp-stat-label">
+                <span className="sr-only">100% </span>só leitura: nenhum Pix, pagamento ou transferência
+              </span>
+            </p>
+            <p className="lp-stat">
+              <span className="lp-stat-value">Ao centavo</span>
+              <span className="lp-stat-label">cada fatura conferida com o total que o banco informou</span>
             </p>
           </div>
         </div>
@@ -369,6 +365,14 @@ function ForDevs() {
             <div className="lp-dev-numbers">
               <p className="lp-dev-number">
                 <strong>
+                  <Count to={TOTAL_TESTS} digits={3} />
+                </strong>
+                <span className="lp-body">
+                  <span className="sr-only">{TOTAL_TESTS} </span>testes automatizados no total
+                </span>
+              </p>
+              <p className="lp-dev-number">
+                <strong>
                   <Count to={TESTS.unitAndIntegration} digits={3} />
                 </strong>
                 <span className="lp-body">
@@ -381,6 +385,14 @@ function ForDevs() {
                 </strong>
                 <span className="lp-body">
                   <span className="sr-only">{TESTS.endToEnd} </span>testes de ponta a ponta, no celular e no computador
+                </span>
+              </p>
+              <p className="lp-dev-number">
+                <strong>
+                  <Count to={SCREENS} digits={2} />
+                </strong>
+                <span className="lp-body">
+                  <span className="sr-only">{SCREENS} </span>telas no app
                 </span>
               </p>
             </div>
@@ -398,22 +410,72 @@ function ForDevs() {
   );
 }
 
-function FinalCta() {
+function WhyI() {
   return (
-    <section className="lp-final" aria-labelledby="final-title" style={{ paddingInline: "0.5rem" }}>
+    <section className="lp-section lp-why" aria-labelledby="porque-title">
+      <div className="lp-wrap lp-why-grid">
+        <h2 id="porque-title" className="lp-h2">
+          Por que eu criei o Cruzado
+        </h2>
+        <div className="lp-why-text">
+          {WHY.map((p) => (
+            <p key={p.slice(0, 24)}>{p}</p>
+          ))}
+          <p className="lp-why-sign">
+            <Coin className="lp-why-coin" />
+            Vinicius Silva
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Faq() {
+  return (
+    <section className="lp-section" aria-labelledby="faq-title">
+      <div className="lp-wrap lp-faq-grid">
+        <h2 id="faq-title" className="lp-h2">
+          Perguntas frequentes
+        </h2>
+        <div className="lp-faq">
+          {FAQ.map((item) => (
+            <details key={item.q} className="lp-faq-item">
+              <summary>
+                <span>{item.q}</span>
+                <Plus className="lp-faq-icon" size={20} aria-hidden />
+              </summary>
+              <p className="lp-body">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Invite() {
+  return (
+    <section id="convite" className="lp-final" aria-labelledby="final-title" style={{ paddingInline: "0.5rem" }}>
       <div className="lp-note" style={{ maxWidth: "82rem", marginInline: "auto" }}>
         <Rosette />
         <div className="lp-final-inner">
           <h2 id="final-title" className="lp-h2">
-            Veja o Cruzado funcionando agora
+            Quer usar o Cruzado?
           </h2>
           <p className="lp-lead" style={{ color: "var(--lp-note-muted)" }}>
-            Abra a demonstração com dados de exemplo. Sem cadastro, direto no celular ou no computador.
+            Por enquanto, o Cruzado é usado só por convite. Me chame no LinkedIn e conte um pouco de como você organiza suas finanças hoje.
           </p>
-          <a className="lp-btn lp-btn-primary" href={DEMO_URL}>
-            <Coin className="lp-coin" />
-            Ver demonstração
-          </a>
+          <div className="lp-actions" style={{ justifyContent: "center" }}>
+            <a className="lp-btn lp-btn-primary" href={LINKEDIN_URL}>
+              <Coin className="lp-coin" />
+              Pedir convite no LinkedIn
+            </a>
+            <a className="lp-btn lp-btn-ghost" href={DEMO_URL}>
+              Ver demonstração
+            </a>
+          </div>
+          <p className="lp-hero-note">Sem formulário: a conversa é pelo LinkedIn, e nada é guardado nesta página.</p>
         </div>
       </div>
     </section>
@@ -431,8 +493,8 @@ function Footer() {
         <p className="lp-body lp-small">Código aberto sob a licença Apache-2.0. O nome vem do Cruzado, a moeda brasileira de 1986.</p>
       </div>
       <nav aria-label="Rodapé">
-        <a href="/privacidade">Privacidade</a>
-        <a href="/termos">Termos</a>
+        <a href="/privacidade">Privacidade (rascunho)</a>
+        <a href="/termos">Termos (rascunho)</a>
         <a href="/entrar">Entrar</a>
       </nav>
     </footer>
@@ -457,6 +519,7 @@ export function LandingPage() {
           <a className="lp-nav-wide" href={REPO_URL}>
             GitHub
           </a>
+          <a href="#convite">Quero usar</a>
           <a className="lp-nav-login" href="/entrar">
             Entrar
           </a>
@@ -465,12 +528,14 @@ export function LandingPage() {
       <main id="conteudo">
         <Hero />
         <BillSection />
+        <WhyI />
         <ChatSection />
         <Features />
         <HowItWorks />
         <Security />
+        <Faq />
         <ForDevs />
-        <FinalCta />
+        <Invite />
       </main>
       <Footer />
     </div>

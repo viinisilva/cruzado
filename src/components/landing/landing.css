@@ -437,7 +437,7 @@
 }
 
 .lp-count::after {
-  content: counter(lp-n);
+  content: counter(lp-n) var(--suffix, "");
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -619,11 +619,12 @@
 
 @media (max-width: 899px) {
   /* On a phone only the current phase is shown above the bill, so the bill stays on screen. */
-  [data-scrolly="true"] .lp-phase[data-active="false"] {
-    display: none;
+  /* All phases share one cell, so the block is always as tall as the longest one and the bill below never moves. */
+  [data-scrolly="true"] .lp-phase {
+    grid-area: 1 / 1;
   }
-  [data-scrolly="true"] .lp-phases {
-    min-height: 6.5rem;
+  [data-scrolly="true"] .lp-phase[data-active="false"] {
+    visibility: hidden;
   }
 }
 
@@ -1715,4 +1716,102 @@
 .lp-chat[data-phase="thinking"] .lp-thinking {
   opacity: 1;
   transform: none;
+}
+
+/* ---------- Why I built it ---------- */
+
+.lp-why-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-why-grid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 4rem;
+  }
+}
+
+.lp-why-text {
+  display: grid;
+  gap: 1.1rem;
+  max-width: 36rem;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.lp-why-sign {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
+.lp-why-coin {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* ---------- FAQ ---------- */
+
+.lp-faq-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-faq-grid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 4rem;
+  }
+}
+
+.lp-faq {
+  border-top: 1px solid var(--border-strong);
+}
+
+.lp-faq-item {
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.lp-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
+  padding-block: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.lp-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-icon {
+  flex: none;
+  color: var(--primary);
+  transition: transform 200ms var(--lp-ease);
+}
+
+.lp-faq-item[open] .lp-faq-icon {
+  transform: rotate(45deg);
+}
+
+.lp-faq-item p {
+  padding-bottom: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-faq-icon {
+    transition: none;
+  }
+}
+
+.lp-dev-numbers {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }

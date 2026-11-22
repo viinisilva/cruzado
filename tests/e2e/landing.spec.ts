@@ -50,7 +50,22 @@ test("loads the landing page with its own title, headline and links", async ({ p
   const hero = page.getByRole("region", { name: "Seu dinheiro, com a prova de cada número." });
   await expect(hero.getByRole("link", { name: "Ver demonstração" })).toHaveAttribute("href", "https://cruzado-demo.vercel.app");
   await expect(hero.getByRole("link", { name: "Ver no GitHub" })).toHaveAttribute("href", "https://github.com/viinisilva/cruzado");
-  await expect(page.getByRole("link", { name: "LinkedIn" })).toHaveAttribute("href", "https://www.linkedin.com/in/viinicius-silva");
+  await expect(page.getByRole("link", { name: "LinkedIn", exact: true })).toHaveAttribute("href", "https://www.linkedin.com/in/viinicius-silva");
+  // Invitation only for now: a plain link to a conversation, no form.
+  await expect(page.getByRole("link", { name: "Quero usar" })).toHaveAttribute("href", "#convite");
+  const invite = page.getByRole("region", { name: "Quer usar o Cruzado?" });
+  await expect(invite.getByRole("link", { name: "Pedir convite no LinkedIn" })).toHaveAttribute("href", "https://www.linkedin.com/in/viinicius-silva");
+  await expect(page.locator("form")).toHaveCount(0);
+  // Drafts are called drafts here too, as on the login page and on the pages themselves.
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Privacidade (rascunho)" })).toHaveAttribute("href", "/privacidade");
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Termos (rascunho)" })).toHaveAttribute("href", "/termos");
+  // The FAQ opens with the keyboard, without scripts (details/summary).
+  const faq = page.getByRole("region", { name: "Perguntas frequentes" });
+  await faq.locator("summary", { hasText: "Vocês veem a minha senha do banco?" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(faq.getByText(/Você autoriza o acesso no ambiente do próprio banco/)).toBeVisible();
+  // Guests cannot connect banks yet, and the answer says so, with the way around it.
+  await expect(faq).toContainText("dá para importar extratos em CSV ou OFX");
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/viinisilva");
   await expect(page.getByRole("link", { name: "Ler o README" })).toHaveAttribute("href", "https://github.com/viinisilva/cruzado#readme");
   await expect(page.getByRole("img", { name: /Tela inicial do Cruzado no celular/ })).toBeVisible();
