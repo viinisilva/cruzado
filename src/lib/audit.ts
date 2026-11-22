@@ -1,0 +1,56 @@
+import type { DB } from "@/db/connection";
+import * as s from "@/db/schema";
+import { newId } from "./ids";
+
+export type AuditAction =
+  | "auth.signup"
+  | "auth.login"
+  | "auth.login_failed"
+  | "auth.logout"
+  | "auth.demo_created"
+  | "import.completed"
+  | "transaction.created"
+  | "transaction.updated"
+  | "transaction.deleted"
+  | "account.created"
+  | "account.updated"
+  | "account.deleted"
+  | "category.created"
+  | "agent.drafted"
+  | "agent.confirmed"
+  | "agent.updated"
+  | "agent.paused"
+  | "agent.resumed"
+  | "agent.deleted"
+  | "ai.consent_granted"
+  | "ai.consent_revoked"
+  | "mcp.token_created"
+  | "mcp.token_revoked"
+  | "auth.password_changed"
+  | "auth.sessions_ended"
+  | "auth.totp_enabled"
+  | "auth.totp_disabled"
+  | "auth.reauth_failed"
+  | "bank.connected"
+  | "bank.synced"
+  | "bank.disconnected"
+  | "bank.history_deleted"
+  | "bank.link_refused"
+  | "data.exported"
+  | "whatsapp.link_requested"
+  | "whatsapp.linked"
+  | "whatsapp.settings_changed"
+  | "whatsapp.disconnected"
+  | "reconciliation.confirmed"
+  | "reconciliation.undone"
+  | "reconciliation.dismissed"
+  | "reconciliation.applied"
+  | "reconciliation.applied_all"
+  | "reconciliation.reverted"
+  | "reconciliation.suggestion_applied"
+  | "user.deleted";
+
+/** Records who did what. Meta holds ids/counts/flags only — never amounts, descriptions or secrets. */
+export async function audit(db: Pick<DB, "insert">, userId: string | null, action: AuditAction, meta: Record<string, string | number | boolean | null> = {}) {
+  await db.insert(s.auditEvents).values({ id: newId(), userId, action, meta });
+}

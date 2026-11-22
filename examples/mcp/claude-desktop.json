@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cruzado": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3000/api/mcp", "--header", "Authorization:Bearer ${CRUZADO_MCP_TOKEN}"],
+      "env": { "CRUZADO_MCP_TOKEN": "defina-no-seu-ambiente-ou-substitua-localmente" }
+    }
+  }
+}

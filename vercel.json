@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci",
+  "regions": ["gru1"],
+  "crons": [
+    { "path": "/api/cron/agents", "schedule": "0 11 * * *" },
+    { "path": "/api/cron/banks", "schedule": "0 23 * * *" }
+  ]
+}

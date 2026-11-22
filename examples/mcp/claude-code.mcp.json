@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cruzado": {
+      "type": "http",
+      "url": "http://localhost:3000/api/mcp",
+      "headers": { "Authorization": "Bearer ${CRUZADO_MCP_TOKEN}" }
+    }
+  }
+}

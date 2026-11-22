@@ -1,0 +1,50 @@
+# Self-hosted stack: PostgreSQL + Tostão. Usage: cp .env.example .env && docker compose up -d --build
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tostao
+      POSTGRES_USER: tostao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tostao -d tostao"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://tostao:${POSTGRES_PASSWORD}@db:5432/tostao
+      # Single instance: the app runs the agent scheduler itself.
+      ENABLE_INPROCESS_SCHEDULER: "1"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  # Optional dedicated scheduler (use with ENABLE_INPROCESS_SCHEDULER=0 on app, or for several app replicas):
+  #   docker compose --profile worker up -d
+  worker:
+    profiles: ["worker"]
+    build:
+      context: .
+      target: tools
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://tostao:${POSTGRES_PASSWORD}@db:5432/tostao
+
+volumes:
+  db-data:
