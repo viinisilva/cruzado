@@ -2,18 +2,19 @@
 
 Gerado por `npm run licenses` a partir do `package-lock.json`. Não edite à mão.
 
-Dependências diretas de runtime: @anthropic-ai/sdk, @electric-sql/pglite, @fontsource/ibm-plex-sans, @modelcontextprotocol/sdk, drizzle-orm, lucide-react, next, papaparse, pg, react, react-dom, server-only, zod.
+Dependências diretas de runtime: @anthropic-ai/sdk, @electric-sql/pglite, @fontsource/ibm-plex-sans, @modelcontextprotocol/sdk, drizzle-orm, lucide-react, motion, next, papaparse, pg, pluggy-connect-sdk, react, react-dom, server-only, zod.
 
 Fontes: IBM Plex Sans (SIL Open Font License 1.1), empacotada por @fontsource/ibm-plex-sans. Ícones: lucide-react (ISC).
 
-## Resumo — dependências de runtime (182 pacotes)
+## Resumo — dependências de runtime (195 pacotes)
 
 | Licença | Pacotes |
 | --- | --- |
-| MIT | 125 |
-| Apache-2.0 | 23 |
+| MIT | 131 |
+| Apache-2.0 | 24 |
 | ISC | 12 |
 | LGPL-3.0-or-later | 10 |
+| UNKNOWN | 6 |
 | Apache-2.0 AND LGPL-3.0-or-later | 3 |
 | BSD-3-Clause | 3 |
 | OFL-1.1 | 1 |
@@ -25,19 +26,19 @@ Fontes: IBM Plex Sans (SIL Open Font License 1.1), empacotada por @fontsource/ib
 
 Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 
-## Resumo — dependências de desenvolvimento (423 pacotes, não distribuídas na imagem)
+## Resumo — dependências de desenvolvimento (404 pacotes, não distribuídas na imagem)
 
 | Licença | Pacotes |
 | --- | --- |
-| MIT | 358 |
+| MIT | 338 |
 | MPL-2.0 | 25 |
 | Apache-2.0 | 18 |
 | ISC | 11 |
 | BSD-2-Clause | 7 |
+| BlueOak-1.0.0 | 2 |
 | Python-2.0 | 1 |
 | BSD-3-Clause | 1 |
 | CC0-1.0 | 1 |
-| BlueOak-1.0.0 | 1 |
 
 ## Lista completa — runtime
 
@@ -48,7 +49,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | @electric-sql/pglite | 0.5.13 | Apache-2.0 |
 | @emnapi/runtime | 1.11.3 | MIT |
 | @fontsource/ibm-plex-sans | 5.3.0 | OFL-1.1 |
-| @hono/node-server | 2.1.5 | MIT |
+| @hono/node-server | 2.1.9 | MIT |
 | @img/colour | 1.1.0 | MIT |
 | @img/sharp-darwin-arm64 | 0.35.5 | Apache-2.0 |
 | @img/sharp-darwin-x64 | 0.35.5 | Apache-2.0 |
@@ -77,15 +78,15 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | @img/sharp-win32-ia32 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later |
 | @img/sharp-win32-x64 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later |
 | @modelcontextprotocol/sdk | 1.32.2 | MIT |
-| @next/env | 16.4.3 | MIT |
-| @next/swc-darwin-arm64 | 16.4.3 | MIT |
-| @next/swc-darwin-x64 | 16.4.3 | MIT |
-| @next/swc-linux-arm64-gnu | 16.4.3 | MIT |
-| @next/swc-linux-arm64-musl | 16.4.3 | MIT |
-| @next/swc-linux-x64-gnu | 16.4.3 | MIT |
-| @next/swc-linux-x64-musl | 16.4.3 | MIT |
-| @next/swc-win32-arm64-msvc | 16.4.3 | MIT |
-| @next/swc-win32-x64-msvc | 16.4.3 | MIT |
+| @next/env | 16.4.6 | MIT |
+| @next/swc-darwin-arm64 | 16.4.6 | MIT |
+| @next/swc-darwin-x64 | 16.4.6 | MIT |
+| @next/swc-linux-arm64-gnu | 16.4.6 | MIT |
+| @next/swc-linux-arm64-musl | 16.4.6 | MIT |
+| @next/swc-linux-x64-gnu | 16.4.6 | MIT |
+| @next/swc-linux-x64-musl | 16.4.6 | MIT |
+| @next/swc-win32-arm64-msvc | 16.4.6 | MIT |
+| @next/swc-win32-x64-msvc | 16.4.6 | MIT |
 | @opentelemetry/api | 1.10.0 | Apache-2.0 |
 | @playwright/test | 1.64.1 | Apache-2.0 |
 | @stablelib/base64 | 1.0.1 | MIT |
@@ -97,6 +98,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | ajv | 8.20.0 | MIT |
 | ajv-formats | 3.0.1 | MIT |
 | baseline-browser-mapping | 2.11.34 | Apache-2.0 |
+| belter | 1.0.190 | Apache-2.0 |
 | body-parser | 2.4.0 | MIT |
 | bytes | 3.1.2 | MIT |
 | call-bind-apply-helpers | 1.0.2 | MIT |
@@ -109,6 +111,8 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | cookie | 0.7.2 | MIT |
 | cookie-signature | 1.2.2 | MIT |
 | cors | 2.8.6 | MIT |
+| cross-domain-safe-weakmap | 1.0.29 | UNKNOWN |
+| cross-domain-utils | 2.0.38 | UNKNOWN |
 | cross-spawn | 7.0.6 | MIT |
 | csstype | 3.2.3 | MIT |
 | debug | 4.4.3 | MIT |
@@ -132,6 +136,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | fast-uri | 3.1.9 | BSD-3-Clause |
 | finalhandler | 2.1.1 | MIT |
 | forwarded | 0.2.0 | MIT |
+| framer-motion | 14.9.1 | MIT |
 | fresh | 2.0.0 | MIT |
 | function-bind | 1.1.2 | MIT |
 | get-intrinsic | 1.3.0 | MIT |
@@ -139,7 +144,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | gopd | 1.2.0 | MIT |
 | has-symbols | 1.1.0 | MIT |
 | hasown | 2.0.4 | MIT |
-| hono | 4.13.14 | MIT |
+| hono | 4.13.19 | MIT |
 | http-errors | 2.0.1 | MIT |
 | iconv-lite | 0.7.3 | MIT |
 | inherits | 2.0.4 | ISC |
@@ -151,16 +156,20 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | json-schema-to-ts | 3.1.1 | MIT |
 | json-schema-traverse | 1.0.0 | MIT |
 | json-schema-typed | 8.0.2 | BSD-2-Clause |
+| jwt-decode | 4.0.0 | MIT |
 | lucide-react | 1.64.0 | ISC |
 | math-intrinsics | 1.1.0 | MIT |
 | media-typer | 1.1.1 | MIT |
 | merge-descriptors | 2.0.0 | MIT |
 | mime-db | 1.54.0 | MIT |
 | mime-types | 3.0.2 | MIT |
+| motion | 14.9.1 | MIT |
+| motion-dom | 14.9.1 | MIT |
+| motion-utils | 14.7.0 | MIT |
 | ms | 2.1.3 | MIT |
 | nanoid | 3.3.20 | MIT |
 | negotiator | 1.1.0 | MIT |
-| next | 16.4.3 | MIT |
+| next | 16.4.6 | MIT |
 | object-assign | 4.1.1 | MIT |
 | object-inspect | 1.13.4 | MIT |
 | on-finished | 2.4.2 | MIT |
@@ -181,6 +190,8 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | pkce-challenge | 5.0.1 | MIT |
 | playwright | 1.64.1 | Apache-2.0 |
 | playwright-core | 1.64.1 | Apache-2.0 |
+| pluggy-connect-sdk | 2.14.2 | MIT |
+| post-robot | 10.0.46 | UNKNOWN |
 | postcss | 8.5.23 | MIT |
 | postgres-array | 2.0.0 | MIT |
 | postgres-bytea | 1.0.1 | MIT |
@@ -218,13 +229,16 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | tslib | 2.8.1 | 0BSD |
 | type-is | 2.1.0 | MIT |
 | undici-types | 8.9.0 | MIT |
+| universal-serialize | 1.0.10 | UNKNOWN |
 | unpipe | 1.0.0 | MIT |
 | vary | 1.1.2 | MIT |
 | which | 2.0.2 | ISC |
 | wrappy | 1.0.2 | ISC |
 | xtend | 4.0.2 | MIT |
+| zalgo-promise | 1.0.48 | UNKNOWN |
 | zod | 4.6.7 | MIT |
 | zod-to-json-schema | 3.25.2 | ISC |
+| zoid | 9.0.63 | UNKNOWN |
 
 ## Lista completa — desenvolvimento
 
@@ -248,8 +262,10 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | @babel/traverse | 7.29.12 | MIT |
 | @babel/types | 7.29.11 | MIT |
 | @emnapi/core | 1.10.0 | MIT |
-| @emnapi/runtime | 1.10.0 | MIT |
+| @emnapi/core | 2.0.0-beta.2 | MIT |
+| @emnapi/runtime | 2.0.0-beta.2 | MIT |
 | @emnapi/wasi-threads | 1.2.1 | MIT |
+| @emnapi/wasi-threads | 2.2.0 | MIT |
 | @esbuild/aix-ppc64 | 0.28.2 | MIT |
 | @esbuild/android-arm | 0.28.2 | MIT |
 | @esbuild/android-arm64 | 0.28.2 | MIT |
@@ -291,34 +307,36 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | @humanfs/types | 0.15.0 | Apache-2.0 |
 | @humanwhocodes/module-importer | 1.0.1 | Apache-2.0 |
 | @humanwhocodes/retry | 0.4.3 | Apache-2.0 |
+| @isaacs/nonrecursive-glob-match | 1.1.0 | BlueOak-1.0.0 |
 | @jridgewell/gen-mapping | 0.3.13 | MIT |
 | @jridgewell/remapping | 2.3.5 | MIT |
 | @jridgewell/resolve-uri | 3.1.2 | MIT |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT |
 | @jridgewell/trace-mapping | 0.3.31 | MIT |
 | @napi-rs/wasm-runtime | 1.2.6 | MIT |
-| @next/eslint-plugin-next | 16.4.3 | MIT |
+| @next/eslint-plugin-next | 16.4.6 | MIT |
 | @nodelib/fs.scandir | 2.1.5 | MIT |
 | @nodelib/fs.stat | 2.0.5 | MIT |
 | @nodelib/fs.walk | 1.2.8 | MIT |
 | @nolyfill/is-core-module | 1.0.39 | MIT |
 | @oxc-project/types | 0.156.0 | MIT |
-| @rolldown/binding-android-arm-eabi | 1.2.16 | MIT |
-| @rolldown/binding-android-arm64 | 1.2.16 | MIT |
-| @rolldown/binding-darwin-arm64 | 1.2.16 | MIT |
-| @rolldown/binding-darwin-x64 | 1.2.16 | MIT |
-| @rolldown/binding-freebsd-x64 | 1.2.16 | MIT |
-| @rolldown/binding-linux-arm-gnueabihf | 1.2.16 | MIT |
-| @rolldown/binding-linux-arm64-gnu | 1.2.16 | MIT |
-| @rolldown/binding-linux-arm64-musl | 1.2.16 | MIT |
-| @rolldown/binding-linux-ppc64-gnu | 1.2.16 | MIT |
-| @rolldown/binding-linux-s390x-gnu | 1.2.16 | MIT |
-| @rolldown/binding-linux-x64-gnu | 1.2.16 | MIT |
-| @rolldown/binding-linux-x64-musl | 1.2.16 | MIT |
-| @rolldown/binding-openharmony-arm64 | 1.2.16 | MIT |
-| @rolldown/binding-win32-arm64-msvc | 1.2.16 | MIT |
-| @rolldown/binding-win32-x64-msvc | 1.2.16 | MIT |
-| @rolldown/pluginutils | 1.0.1 | MIT |
+| @rolldown/binding-android-arm-eabi | 1.2.19 | MIT |
+| @rolldown/binding-android-arm64 | 1.2.19 | MIT |
+| @rolldown/binding-darwin-arm64 | 1.2.19 | MIT |
+| @rolldown/binding-darwin-x64 | 1.2.19 | MIT |
+| @rolldown/binding-freebsd-x64 | 1.2.19 | MIT |
+| @rolldown/binding-linux-arm-gnueabihf | 1.2.19 | MIT |
+| @rolldown/binding-linux-arm64-gnu | 1.2.19 | MIT |
+| @rolldown/binding-linux-arm64-musl | 1.2.19 | MIT |
+| @rolldown/binding-linux-ppc64-gnu | 1.2.19 | MIT |
+| @rolldown/binding-linux-s390x-gnu | 1.2.19 | MIT |
+| @rolldown/binding-linux-x64-gnu | 1.2.19 | MIT |
+| @rolldown/binding-linux-x64-musl | 1.2.19 | MIT |
+| @rolldown/binding-openharmony-arm64 | 1.2.19 | MIT |
+| @rolldown/binding-wasm32-wasi | 1.2.19 | MIT |
+| @rolldown/binding-win32-arm64-msvc | 1.2.19 | MIT |
+| @rolldown/binding-win32-x64-msvc | 1.2.19 | MIT |
+| @rolldown/pluginutils | 1.1.1 | MIT |
 | @rtsao/scc | 1.1.0 | MIT |
 | @tailwindcss/node | 4.3.3 | MIT |
 | @tailwindcss/oxide | 4.3.3 | MIT |
@@ -343,40 +361,18 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | @types/json5 | 0.0.29 | MIT |
 | @types/papaparse | 5.5.2 | MIT |
 | @types/react-dom | 19.3.0 | MIT |
-| @typescript-eslint/eslint-plugin | 8.72.1 | MIT |
-| @typescript-eslint/parser | 8.72.1 | MIT |
-| @typescript-eslint/project-service | 8.72.1 | MIT |
-| @typescript-eslint/scope-manager | 8.72.1 | MIT |
-| @typescript-eslint/tsconfig-utils | 8.72.1 | MIT |
-| @typescript-eslint/type-utils | 8.72.1 | MIT |
-| @typescript-eslint/types | 8.72.1 | MIT |
-| @typescript-eslint/typescript-estree | 8.72.1 | MIT |
-| @typescript-eslint/utils | 8.72.1 | MIT |
-| @typescript-eslint/visitor-keys | 8.72.1 | MIT |
-| @unrs/resolver-binding-android-arm-eabi | 1.12.2 | MIT |
-| @unrs/resolver-binding-android-arm64 | 1.12.2 | MIT |
-| @unrs/resolver-binding-darwin-arm64 | 1.12.2 | MIT |
-| @unrs/resolver-binding-darwin-x64 | 1.12.2 | MIT |
-| @unrs/resolver-binding-freebsd-x64 | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-arm-gnueabihf | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-arm-musleabihf | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-arm64-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-arm64-musl | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-loong64-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-loong64-musl | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-ppc64-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-riscv64-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-riscv64-musl | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-s390x-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-x64-gnu | 1.12.2 | MIT |
-| @unrs/resolver-binding-linux-x64-musl | 1.12.2 | MIT |
-| @unrs/resolver-binding-openharmony-arm64 | 1.12.2 | MIT |
-| @unrs/resolver-binding-wasm32-wasi | 1.12.2 | MIT |
-| @unrs/resolver-binding-win32-arm64-msvc | 1.12.2 | MIT |
-| @unrs/resolver-binding-win32-ia32-msvc | 1.12.2 | MIT |
-| @unrs/resolver-binding-win32-x64-msvc | 1.12.2 | MIT |
-| @vitest/mocker | 5.0.5 | MIT |
-| @vitest/spy | 5.0.5 | MIT |
+| @typescript-eslint/eslint-plugin | 8.73.0 | MIT |
+| @typescript-eslint/parser | 8.73.0 | MIT |
+| @typescript-eslint/project-service | 8.73.0 | MIT |
+| @typescript-eslint/scope-manager | 8.73.0 | MIT |
+| @typescript-eslint/tsconfig-utils | 8.73.0 | MIT |
+| @typescript-eslint/type-utils | 8.73.0 | MIT |
+| @typescript-eslint/types | 8.73.0 | MIT |
+| @typescript-eslint/typescript-estree | 8.73.0 | MIT |
+| @typescript-eslint/utils | 8.73.0 | MIT |
+| @typescript-eslint/visitor-keys | 8.73.0 | MIT |
+| @vitest/mocker | 5.1.0 | MIT |
+| @vitest/spy | 5.1.0 | MIT |
 | acorn | 8.19.0 | MIT |
 | acorn-jsx | 5.3.2 | MIT |
 | ajv | 6.15.0 | MIT |
@@ -399,7 +395,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | axobject-query | 4.1.0 | Apache-2.0 |
 | balanced-match | 4.0.4 | MIT |
 | balanced-match | 1.0.2 | MIT |
-| brace-expansion | 5.0.12 | MIT |
+| brace-expansion | 5.0.13 | MIT |
 | brace-expansion | 1.1.21 | MIT |
 | braces | 3.0.3 | MIT |
 | browserslist | 4.29.5 | MIT |
@@ -434,9 +430,9 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | escalade | 3.2.0 | MIT |
 | escape-string-regexp | 4.0.0 | MIT |
 | eslint | 9.39.5 | MIT |
-| eslint-config-next | 16.4.3 | MIT |
+| eslint-config-next | 16.4.6 | MIT |
 | eslint-import-resolver-node | 0.3.10 | MIT |
-| eslint-import-resolver-typescript | 3.10.1 | ISC |
+| eslint-import-resolver-typescript | 3.7.0 | ISC |
 | eslint-module-utils | 2.14.0 | MIT |
 | eslint-plugin-import | 2.32.0 | MIT |
 | eslint-plugin-jsx-a11y | 6.10.2 | MIT |
@@ -453,6 +449,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | estree-walker | 3.0.3 | MIT |
 | esutils | 2.0.3 | BSD-2-Clause |
 | expect-type | 1.4.0 | Apache-2.0 |
+| fast-glob | 3.3.3 | MIT |
 | fast-glob | 3.3.1 | MIT |
 | fast-json-stable-stringify | 2.1.0 | MIT |
 | fast-levenshtein | 2.0.6 | MIT |
@@ -484,7 +481,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | has-tostringtag | 1.0.2 | MIT |
 | hermes-estree | 0.25.1 | MIT |
 | hermes-parser | 0.25.1 | MIT |
-| ignore | 7.0.14 | MIT |
+| ignore | 7.0.16 | MIT |
 | ignore | 5.3.2 | MIT |
 | import-fresh | 3.3.1 | MIT |
 | imurmurhash | 0.1.4 | MIT |
@@ -493,7 +490,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | is-async-function | 2.1.1 | MIT |
 | is-bigint | 1.1.0 | MIT |
 | is-boolean-object | 1.2.2 | MIT |
-| is-bun-module | 2.0.0 | MIT |
+| is-bun-module | 1.3.0 | MIT |
 | is-callable | 1.2.7 | MIT |
 | is-core-module | 2.17.0 | MIT |
 | is-data-view | 1.0.2 | MIT |
@@ -564,10 +561,9 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | magic-string | 0.30.21 | MIT |
 | merge2 | 1.4.1 | MIT |
 | micromatch | 4.0.8 | MIT |
-| minimatch | 10.2.6 | BlueOak-1.0.0 |
+| minimatch | 11.0.9 | BlueOak-1.0.0 |
 | minimatch | 3.1.5 | ISC |
 | minimist | 1.2.8 | MIT |
-| napi-postinstall | 0.3.7 | MIT |
 | natural-compare | 1.4.0 | MIT |
 | node-exports-info | 1.6.2 | MIT |
 | node-releases | 2.0.61 | MIT |
@@ -588,7 +584,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | picomatch | 2.3.2 | MIT |
 | picomatch | 4.0.7 | MIT |
 | possible-typed-array-names | 1.1.0 | MIT |
-| postcss | 8.5.32 | MIT |
+| postcss | 8.5.33 | MIT |
 | prelude-ls | 1.2.1 | MIT |
 | prop-types | 15.8.1 | MIT |
 | punycode | 2.3.1 | MIT |
@@ -600,7 +596,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | resolve-from | 4.0.0 | MIT |
 | resolve-pkg-maps | 1.0.0 | MIT |
 | reusify | 1.1.0 | MIT |
-| rolldown | 1.2.16 | MIT |
+| rolldown | 1.2.19 | MIT |
 | run-parallel | 1.2.0 | MIT |
 | safe-array-concat | 1.1.4 | MIT |
 | safe-push-apply | 1.0.0 | MIT |
@@ -609,7 +605,7 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | set-function-length | 1.2.2 | MIT |
 | set-function-name | 2.0.2 | MIT |
 | set-proto | 1.0.0 | MIT |
-| stable-hash | 0.0.5 | MIT |
+| stable-hash | 0.0.4 | MIT |
 | std-env | 4.3.0 | MIT |
 | stop-iteration-iterator | 1.1.0 | MIT |
 | string.prototype.includes | 2.0.1 | MIT |
@@ -637,13 +633,12 @@ Nenhuma licença GPL/AGPL/SSPL em dependências de runtime.
 | typed-array-byte-offset | 1.0.5 | MIT |
 | typed-array-length | 1.0.8 | MIT |
 | typescript | 6.0.3 | Apache-2.0 |
-| typescript-eslint | 8.72.1 | MIT |
+| typescript-eslint | 8.73.0 | MIT |
 | unbox-primitive | 1.1.0 | MIT |
-| unrs-resolver | 1.12.2 | MIT |
 | update-browserslist-db | 1.3.4 | MIT |
 | uri-js | 4.4.1 | BSD-2-Clause |
-| vite | 8.3.5 | MIT |
-| vitest | 5.0.5 | MIT |
+| vite | 8.3.8 | MIT |
+| vitest | 5.1.0 | MIT |
 | which-boxed-primitive | 1.1.1 | MIT |
 | which-builtin-type | 1.2.1 | MIT |
 | which-collection | 1.0.2 | MIT |

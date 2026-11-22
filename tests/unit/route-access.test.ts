@@ -41,6 +41,12 @@ describe("routeAccess", () => {
     expect(routeAccess("/api/export", { hasSession: false, demo: false })).toBe("unauthorized");
   });
 
+  it("the link preview image of the landing page is public, nothing next to it is", () => {
+    expect(routeAccess("/opengraph-image", { hasSession: false, demo: false })).toBe("allow");
+    expect(routeAccess("/opengraph-image-x", { hasSession: false, demo: false })).toBe("login");
+    expect(routeAccess("/inicio/opengraph-image", { hasSession: false, demo: false })).toBe("login");
+  });
+
   it("a route that does not exist yet is closed too", () => {
     expect(routeAccess("/admin/convidados", { hasSession: false, demo: false })).toBe("login");
     expect(routeAccess("/api/qualquer-coisa", { hasSession: false, demo: false })).toBe("unauthorized");

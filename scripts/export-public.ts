@@ -57,9 +57,9 @@ export function isExcluded(file: string): boolean {
 
 const BINARY = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|woff2?|ttf|otf|mp4|mov|sqlite|db)$/i;
 
-/** Screenshots of the public demo for the README: flat in docs/readme/, PNG only. */
+/** Screenshots of the public demo, for the README (docs/readme/) and the landing page (src/components/landing/img/). Flat, PNG only. */
 export function isReviewedImage(file: string): boolean {
-  return /^docs\/readme\/[a-z0-9][a-z0-9-]*\.png$/.test(file);
+  return /^(docs\/readme|src\/components\/landing\/img)\/[a-z0-9][a-z0-9-]*\.png$/.test(file);
 }
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);

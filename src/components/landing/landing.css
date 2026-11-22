@@ -1,0 +1,1718 @@
+/* Landing page (/). Uses the app's tokens (globals.css) and adds the banknote panel: deep green, guilloché, lime.
+   Motion rules for this file:
+   - only transform and opacity animate;
+   - the finished state is the default, so without support (or with reduced motion) everything is simply there;
+   - scroll-driven reveals live inside @supports, and every animation sits inside prefers-reduced-motion: no-preference. */
+
+.lp {
+  --lp-max: 72rem;
+  --lp-gutter: 1rem;
+  --lp-radius-panel: 28px;
+  --lp-radius-card: 20px;
+  --lp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --lp-note: #123524;
+  --lp-note-2: #1a4630;
+  --lp-note-fg: #f3f8f2;
+  --lp-note-muted: #c2d6c7;
+  --lp-lime: #c6f36a;
+  font-size: 1rem;
+  overflow-x: clip;
+}
+
+@media (min-width: 640px) {
+  .lp {
+    --lp-gutter: 1.5rem;
+  }
+}
+
+.lp-wrap {
+  width: 100%;
+  max-width: var(--lp-max);
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+/* ---------- Type ---------- */
+
+.lp-display {
+  font-size: clamp(2.6rem, 1.5rem + 5.2vw, 5.4rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.lp-h2 {
+  font-size: clamp(1.9rem, 1.3rem + 2.6vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  max-width: 18ch;
+}
+
+.lp-h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.lp-lead {
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.55;
+  max-width: 34rem;
+}
+
+.lp-body {
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 38rem;
+}
+
+.lp-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Header and progress ---------- */
+
+.lp-progress {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-progress {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      height: 3px;
+      z-index: 50;
+      background: var(--primary);
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      animation: lp-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+@keyframes lp-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.lp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+}
+
+.lp-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.lp-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  border-radius: 999px;
+  font-weight: 500;
+  color: var(--text);
+  transition: background-color 150ms;
+}
+
+.lp-nav a:hover {
+  background: var(--surface-3);
+}
+
+.lp-nav .lp-nav-login {
+  border: 1px solid var(--border-strong);
+}
+
+@media (max-width: 479px) {
+  .lp-nav .lp-nav-wide {
+    display: none;
+  }
+}
+
+/* ---------- Banknote panel (hero and final call) ---------- */
+
+.lp-note {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--lp-radius-panel);
+  background: radial-gradient(120% 90% at 85% 10%, var(--lp-note-2), var(--lp-note) 60%);
+  color: var(--lp-note-fg);
+}
+
+.lp-note :focus-visible {
+  outline-color: var(--lp-lime);
+}
+
+.lp-note-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Slow drifting light in the brand greens: a blurred layer that only moves (transform). */
+.lp-aurora {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(35% 30% at 30% 40%, rgb(198 243 106 / 0.16), transparent 70%),
+    radial-gradient(40% 35% at 70% 60%, rgb(61 220 151 / 0.18), transparent 70%);
+}
+
+.lp-rosette {
+  position: absolute;
+  width: min(68rem, 170vw);
+  height: auto;
+  aspect-ratio: 1;
+  right: -32%;
+  top: 50%;
+  translate: 0 -50%;
+  max-width: none;
+}
+
+.lp-hero .lp-rosette {
+  right: -55%;
+  top: 72%;
+}
+
+@media (min-width: 900px) {
+  .lp-hero .lp-rosette {
+    right: -18%;
+    top: 46%;
+  }
+}
+
+/* Microprint, as on a banknote: a band of tiny repeated text. Decorative. */
+.lp-microprint {
+  position: absolute;
+  inset: auto 0 0.6rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  color: var(--lp-note-muted);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-aurora {
+    animation: lp-drift 26s ease-in-out infinite alternate;
+  }
+  .lp-rosette {
+    animation: lp-spin 240s linear infinite;
+  }
+}
+
+@keyframes lp-drift {
+  from {
+    transform: translate3d(-4%, -3%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(5%, 4%, 0) scale(1.12);
+  }
+}
+
+@keyframes lp-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* ---------- Hero ---------- */
+
+.lp-hero {
+  padding-inline: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .lp-hero {
+    padding-inline: 1rem;
+  }
+}
+
+.lp-hero .lp-note {
+  max-width: 82rem;
+  margin-inline: auto;
+}
+
+.lp-hero-grid {
+  display: grid;
+  gap: 2.5rem;
+  padding: 3rem 1.25rem 4.5rem;
+  max-width: var(--lp-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .lp-hero-grid {
+    padding: 4rem 2.5rem 5rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .lp-hero-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    align-items: center;
+    gap: 3rem;
+    padding: 3.5rem 3.5rem 3rem;
+  }
+}
+
+.lp-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.lp-hero .lp-lead {
+  color: var(--lp-note-muted);
+}
+
+/* Each word rises into place. It starts visible (opacity 0.3, never 0), so the headline is painted at once and the
+   largest text is not held back. */
+.lp-word {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-word {
+    animation: lp-word 700ms var(--lp-ease) both;
+    animation-delay: calc(var(--i) * 70ms);
+  }
+}
+
+@keyframes lp-word {
+  from {
+    opacity: 0.3;
+    transform: translateY(0.32em);
+  }
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding-inline: 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  transition:
+    transform 200ms var(--lp-ease),
+    background-color 200ms,
+    box-shadow 200ms;
+}
+
+.lp-btn:active {
+  transform: scale(0.97);
+}
+
+.lp-btn-primary {
+  background: var(--lp-lime);
+  color: var(--lp-note);
+  box-shadow: 0 10px 30px -12px rgb(198 243 106 / 0.6);
+}
+
+.lp-btn-ghost {
+  color: var(--lp-note-fg);
+  box-shadow: inset 0 0 0 1.5px rgb(243 248 242 / 0.45);
+}
+
+.lp-btn-ghost:hover {
+  box-shadow: inset 0 0 0 1.5px var(--lp-note-fg);
+}
+
+.lp-btn-solid {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+.lp-btn-solid:hover {
+  background: var(--primary-hover);
+}
+
+/* The coin in the main button turns over on hover, like a coin flipped on a table. */
+.lp-coin {
+  display: inline-block;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .lp-btn:hover {
+    transform: translateY(-2px);
+  }
+  .lp-btn:hover .lp-coin {
+    animation: lp-flip 700ms var(--lp-ease);
+  }
+}
+
+@keyframes lp-flip {
+  50% {
+    transform: rotateY(180deg) scale(1.1);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.lp-hero-note {
+  color: var(--lp-note-muted);
+  font-size: 0.875rem;
+}
+
+/* ---------- Counters ---------- */
+
+@property --lp-n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+.lp-stats {
+  display: grid;
+  gap: 1.25rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  padding-top: 1.75rem;
+  border-top: 1px solid rgb(243 248 242 / 0.18);
+}
+
+.lp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lp-stat-value {
+  font-size: clamp(2.25rem, 1.8rem + 1.6vw, 3rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-lime);
+}
+
+.lp-stat-label {
+  color: var(--lp-note-muted);
+  font-size: 0.9375rem;
+}
+
+/* The digits are drawn by CSS from an integer property; the real number is in the text next to it for screen readers. */
+.lp-count {
+  --lp-n: var(--to);
+  counter-reset: lp-n var(--lp-n);
+  display: inline-block;
+  min-width: calc(var(--digits, 1) * 1ch);
+}
+
+.lp-count::after {
+  content: counter(lp-n);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-count {
+    animation: lp-count 1600ms cubic-bezier(0.16, 1, 0.3, 1) 350ms both;
+  }
+}
+
+@keyframes lp-count {
+  from {
+    --lp-n: var(--from, 0);
+  }
+  to {
+    --lp-n: var(--to);
+  }
+}
+
+/* ---------- Phone mockup ---------- */
+
+.lp-phone-stage {
+  display: flex;
+  justify-content: center;
+  perspective: 1100px;
+}
+
+.lp-phone {
+  position: relative;
+  width: 17rem;
+  padding: 0.6rem;
+  border-radius: 2.6rem;
+  background: linear-gradient(160deg, #2a3b31, #0c1410 60%);
+  box-shadow:
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.12),
+    0 40px 80px -30px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(0 0 0 / 0.4);
+}
+
+@media (min-width: 900px) {
+  .lp-phone {
+    width: 16.5rem;
+  }
+}
+
+.lp-phone-screen {
+  overflow: hidden;
+  border-radius: 2.05rem;
+  aspect-ratio: 1024 / 2216;
+  background: #f3f5f3;
+}
+
+.lp-phone-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-phone-float {
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-phone-float {
+    animation: lp-float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes lp-float {
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ---------- Sections ---------- */
+
+.lp-section {
+  padding-block: 5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-section {
+    padding-block: 7.5rem;
+  }
+}
+
+.lp-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Scroll reveal for a few blocks only. Without support the block is simply there. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-reveal {
+      animation: lp-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 55%;
+    }
+  }
+}
+
+@keyframes lp-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+/* ---------- The bill that matches the bank ---------- */
+
+.lp-story-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-story-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 4rem;
+    align-items: start;
+  }
+}
+
+/* With scripts and motion, the section is taller and the bill stays in view while the rows come in. */
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .lp-story-track {
+    height: 330vh;
+  }
+  .lp-story-sticky {
+    position: sticky;
+    top: 1rem;
+  }
+  @media (min-width: 900px) {
+    .lp-story-sticky {
+      top: max(1.5rem, calc(50vh - 20rem));
+    }
+  }
+}
+
+.lp-phases {
+  display: grid;
+  gap: 0.5rem;
+  counter-reset: phase;
+}
+
+.lp-phase {
+  position: relative;
+  padding: 0.75rem 0 0.75rem 2.75rem;
+}
+
+.lp-phase::before {
+  counter-increment: phase;
+  content: counter(phase);
+  position: absolute;
+  left: 0;
+  top: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.lp-phase[data-active="true"]::before {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-fg);
+}
+
+.lp-phase[data-active="false"] .lp-phase-title {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+@media (max-width: 899px) {
+  /* On a phone only the current phase is shown above the bill, so the bill stays on screen. */
+  [data-scrolly="true"] .lp-phase[data-active="false"] {
+    display: none;
+  }
+  [data-scrolly="true"] .lp-phases {
+    min-height: 6.5rem;
+  }
+}
+
+.lp-phase-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.lp-phase p {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  margin-top: 0.25rem;
+}
+
+.lp-bill {
+  border-radius: var(--lp-radius-card);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .lp-bill {
+    padding: 1.75rem;
+  }
+}
+
+.lp-bill-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lp-badge-open {
+  background: var(--attention-soft);
+  color: var(--attention);
+}
+
+.lp-badge-closed {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.lp-rows {
+  display: grid;
+}
+
+.lp-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 0.1rem 0.75rem;
+  align-items: baseline;
+  padding-block: 0.5rem;
+  border-bottom: 1px dashed var(--border);
+  transition:
+    opacity 380ms var(--lp-ease),
+    transform 380ms var(--lp-ease);
+}
+
+.lp-row-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-row-meta {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.lp-row-value {
+  position: relative;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Struck through by a line that grows (transform), not by text-decoration. */
+.lp-row-value::after {
+  content: "";
+  position: absolute;
+  left: -0.2rem;
+  right: -0.2rem;
+  top: 50%;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 450ms var(--lp-ease);
+}
+
+.lp-row[data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.lp-row[data-kind="refund"] .lp-row-value {
+  color: var(--positive);
+}
+
+.lp-row[data-undone="true"] .lp-row-value::after,
+.lp-row[data-state="left"] .lp-row-value::after {
+  transform: scaleX(1);
+}
+
+/* Undone and left-out rows turn grey (still AA), instead of fading, so their text stays readable. */
+.lp-row[data-undone="true"] .lp-row-name,
+.lp-row[data-undone="true"] .lp-row-value,
+.lp-row[data-state="left"] .lp-row-name,
+.lp-row[data-state="left"] .lp-row-value {
+  color: var(--text-muted);
+}
+
+.lp-row-tag {
+  grid-column: 2 / -1;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.lp-row[data-kind="phantom"] .lp-row-tag {
+  color: var(--attention);
+}
+
+.lp-row[data-kind="refund"] .lp-row-tag {
+  color: var(--positive);
+}
+
+.lp-bill-foot {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.lp-bill-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-bill-total {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.lp-bill-total > span:first-child {
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .lp-bill-total {
+    font-size: 1.25rem;
+  }
+}
+
+/* On a phone, long names wrap instead of being cut. */
+@media (max-width: 639px) {
+  .lp-row-name {
+    white-space: normal;
+  }
+  .lp-row {
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+    gap: 0.1rem 0.5rem;
+  }
+}
+
+.lp-match {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 14px;
+  background: var(--positive-soft);
+  color: var(--positive);
+  font-weight: 600;
+  transition:
+    opacity 400ms var(--lp-ease),
+    transform 400ms var(--lp-ease);
+}
+
+.lp-match[data-shown="false"],
+.lp-bank-line[data-shown="false"] {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.lp-bank-line {
+  transition:
+    opacity 400ms var(--lp-ease),
+    transform 400ms var(--lp-ease);
+}
+
+.lp-check {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: none;
+}
+
+.lp-match[data-shown="true"] .lp-check {
+  animation: lp-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-row,
+  .lp-match,
+  .lp-bank-line,
+  .lp-row-value::after {
+    transition: none;
+  }
+  .lp-match[data-shown="true"] .lp-check {
+    animation: none;
+  }
+}
+
+@keyframes lp-pop {
+  from {
+    transform: scale(0.3) rotate(-25deg);
+    opacity: 0;
+  }
+}
+
+/* ---------- Chat ---------- */
+
+.lp-chat-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-chat-grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: 4rem;
+  }
+}
+
+.lp-chat {
+  border-radius: var(--lp-radius-card);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.lp-bubble-q {
+  justify-self: end;
+  max-width: 85%;
+  padding: 0.7rem 1rem;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--primary);
+  color: var(--primary-fg);
+  min-height: 2.9rem;
+}
+
+.lp-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-right: -2px; /* takes no room, so the text after it does not move */
+  vertical-align: -0.15em;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-caret {
+    animation: lp-blink 1s steps(1) infinite;
+  }
+}
+
+@keyframes lp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.lp-bubble-a {
+  max-width: 92%;
+  padding: 0.9rem 1rem;
+  border-radius: 18px 18px 18px 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  line-height: 1.55;
+}
+
+.lp-stack {
+  display: grid;
+  align-items: start;
+}
+
+.lp-stack > * {
+  grid-area: 1 / 1;
+}
+
+.lp-thinking {
+  display: inline-flex;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: var(--surface-2);
+  width: fit-content;
+}
+
+.lp-thinking span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-thinking span {
+    animation: lp-dot 900ms ease-in-out infinite;
+  }
+  .lp-thinking span:nth-child(2) {
+    animation-delay: 150ms;
+  }
+  .lp-thinking span:nth-child(3) {
+    animation-delay: 300ms;
+  }
+}
+
+@keyframes lp-dot {
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.4;
+  }
+}
+
+.lp-evidence-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+/* ---------- Features (bento) ---------- */
+
+.lp-bento {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 720px) {
+  .lp-bento {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .lp-tile-agents {
+    grid-column: span 4;
+    grid-row: span 2;
+  }
+  .lp-tile-bank {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .lp-tile-import,
+  .lp-tile-hide,
+  .lp-tile-mcp {
+    grid-column: span 2;
+  }
+}
+
+.lp-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: var(--lp-radius-card);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition:
+    transform 250ms var(--lp-ease),
+    box-shadow 250ms;
+}
+
+.lp-tile-agents {
+  background: var(--lp-note);
+  color: var(--lp-note-fg);
+  border-color: transparent;
+}
+
+.lp-tile-agents .lp-body {
+  color: var(--lp-note-muted);
+}
+
+.lp-tile-art {
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+/* Light that follows the pointer, moved with transform (bento-glow.tsx sets the position). */
+.lp-glow {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  width: 22rem;
+  height: 22rem;
+  margin: -11rem 0 0 -11rem;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, rgb(61 220 151 / 0.16), transparent);
+  opacity: 0;
+  transform: translate3d(var(--gx, 50%), var(--gy, 50%), 0);
+  transition: opacity 250ms;
+  pointer-events: none;
+}
+
+.lp-tile-agents .lp-glow {
+  background: radial-gradient(closest-side, rgb(198 243 106 / 0.18), transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lp-tile:hover .lp-glow {
+    opacity: 1;
+  }
+  .lp-tile:hover {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .lp-tile:hover {
+    transform: translateY(-4px);
+  }
+}
+
+.lp-toast {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgb(243 248 242 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(243 248 242 / 0.16);
+  max-width: 26rem;
+}
+
+.lp-toast + .lp-toast {
+  margin-top: 0.6rem;
+}
+
+.lp-toast strong {
+  display: block;
+  font-weight: 600;
+}
+
+.lp-toast span {
+  color: var(--lp-note-muted);
+  font-size: 0.9rem;
+}
+
+.lp-bell {
+  flex: none;
+  color: var(--lp-lime);
+  transform-origin: 50% 10%;
+}
+
+.lp-sync {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.lp-sync-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.lp-pulse {
+  position: relative;
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--positive);
+}
+
+.lp-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--positive);
+  opacity: 0;
+}
+
+.lp-files {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lp-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.lp-hide {
+  position: relative;
+  display: grid;
+}
+
+.lp-hide > * {
+  grid-area: 1 / 1;
+}
+
+.lp-hide-value {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The blurred copy is drawn once (static filter); only its opacity changes. */
+.lp-hide-blur {
+  filter: blur(9px);
+  opacity: 0;
+}
+
+.lp-code {
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  background: var(--surface-3);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-toast {
+      animation: lp-toast linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 35%;
+    }
+    .lp-toast + .lp-toast {
+      animation-range: entry 60% cover 45%;
+    }
+    .lp-bell {
+      animation: lp-ring linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 40%;
+    }
+    .lp-file {
+      animation: lp-drop linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 30%;
+    }
+    .lp-file:nth-child(2) {
+      animation-range: entry 45% cover 40%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-pulse::after {
+    animation: lp-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .lp-hide-blur {
+    animation: lp-hide-a 5s ease-in-out infinite;
+  }
+  .lp-hide-sharp {
+    animation: lp-hide-b 5s ease-in-out infinite;
+  }
+}
+
+/* Movement only: the toasts stay fully opaque, so their text never drops below AA while they arrive. */
+@keyframes lp-toast {
+  from {
+    transform: translateY(28px) scale(0.96);
+  }
+}
+
+@keyframes lp-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(16deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(7deg);
+  }
+  80% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes lp-drop {
+  from {
+    transform: translateY(-14px) rotate(-7deg);
+  }
+}
+
+@keyframes lp-ping {
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+  0% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes lp-hide-a {
+  0%,
+  35%,
+  100% {
+    opacity: 0;
+  }
+  45%,
+  85% {
+    opacity: 1;
+  }
+}
+
+@keyframes lp-hide-b {
+  0%,
+  35%,
+  100% {
+    opacity: 1;
+  }
+  45%,
+  85% {
+    opacity: 0;
+  }
+}
+
+/* ---------- How it works ---------- */
+
+.lp-steps-box {
+  position: relative;
+  view-timeline: --lp-steps block;
+}
+
+.lp-steps {
+  display: grid;
+  gap: 2.25rem;
+  padding-left: 3.5rem;
+}
+
+.lp-steps-line {
+  position: absolute;
+  left: 1.2rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: var(--primary);
+  transform-origin: 50% 0;
+}
+
+.lp-steps-rail {
+  position: absolute;
+  left: 1.2rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: var(--border);
+}
+
+@media (min-width: 900px) {
+  .lp-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5rem;
+    padding-left: 0;
+    padding-top: 3.5rem;
+  }
+  .lp-steps-line,
+  .lp-steps-rail {
+    left: 1.2rem;
+    right: 1.2rem;
+    top: 1.15rem;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform-origin: 0 50%;
+  }
+}
+
+.lp-step {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.lp-step-n {
+  position: absolute;
+  left: -3.5rem;
+  top: -0.2rem;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .lp-step-n {
+    left: 0;
+    top: -3.5rem;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-steps-line {
+      animation: lp-draw-y linear both;
+      animation-timeline: --lp-steps;
+      animation-range: entry 40% cover 55%;
+    }
+    @media (min-width: 900px) {
+      .lp-steps-line {
+        animation-name: lp-draw-x;
+      }
+    }
+  }
+}
+
+@keyframes lp-draw-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes lp-draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- Security ---------- */
+
+.lp-safe-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-safe-grid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 4rem;
+  }
+}
+
+.lp-lock {
+  width: 7rem;
+  height: 7rem;
+  color: var(--primary);
+}
+
+.lp-safe-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .lp-safe-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+.lp-safe-item {
+  display: grid;
+  gap: 0.4rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--primary);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-lock-shackle {
+      animation: lp-shackle linear both;
+      animation-timeline: view();
+      animation-range: entry 50% cover 45%;
+    }
+    .lp-lock-body {
+      animation: lp-lock-body linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 35%;
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+    }
+  }
+}
+
+@keyframes lp-shackle {
+  from {
+    transform: translateY(-16px);
+  }
+}
+
+@keyframes lp-lock-body {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+/* ---------- For developers ---------- */
+
+.lp-dev {
+  border-radius: var(--lp-radius-panel);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.75rem 1.25rem;
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 640px) {
+  .lp-dev {
+    padding: 2.5rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .lp-dev {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 3.5rem;
+    gap: 3rem;
+  }
+}
+
+.lp-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lp-pill {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.lp-dev-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.lp-dev-number {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.lp-dev-number strong {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-dev-number .lp-count {
+      animation: lp-count linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 40%;
+    }
+  }
+}
+
+.lp-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.lp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+
+/* ---------- Final call ---------- */
+
+.lp-final .lp-note {
+  padding: 4rem 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .lp-final .lp-note {
+    padding: 6rem 3rem;
+  }
+}
+
+.lp-final-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lp-final .lp-h2 {
+  max-width: 16ch;
+}
+
+.lp-final .lp-rosette {
+  right: auto;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+/* ---------- Footer ---------- */
+
+.lp-footer {
+  padding-block: 3rem 4rem;
+  display: grid;
+  gap: 1.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 5rem;
+}
+
+@media (min-width: 900px) {
+  .lp-footer {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
+.lp-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+}
+
+.lp-footer p a {
+  margin-left: 0.6rem;
+}
+
+.lp-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Pause control (motion-toggle.tsx) ---------- */
+
+.lp-motion-toggle {
+  position: absolute;
+  right: 1rem;
+  bottom: 1.6rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding-inline: 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lp-note-fg);
+  background: rgb(4 20 12 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(243 248 242 / 0.25);
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+
+.lp-motion-toggle:hover {
+  background: rgb(4 20 12 / 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-motion-toggle {
+    display: none;
+  }
+}
+
+.lp[data-motion="paused"] :is(.lp-aurora, .lp-rosette, .lp-phone-float, .lp-hide-blur, .lp-hide-sharp, .lp-caret, .lp-thinking span),
+.lp[data-motion="paused"] .lp-pulse::after {
+  animation-play-state: paused;
+}
+
+.lp-link:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+.lp-footer a:hover {
+  color: var(--primary);
+}
+
+/* Chat phases (chat-demo.tsx): the answer and the evidence fade in once the question is answered. */
+.lp-chat-answer,
+.lp-evidence-title,
+.lp-chip,
+.lp-thinking {
+  transition:
+    opacity 450ms var(--lp-ease),
+    transform 450ms var(--lp-ease);
+}
+
+.lp-chip {
+  transition-delay: calc(120ms + var(--i, 0) * 90ms);
+}
+
+.lp-chat:not([data-phase="done"]) .lp-chat-answer {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.lp-chat:not([data-phase="done"]) :is(.lp-evidence-title, .lp-chip) {
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  transition-delay: 0s;
+}
+
+.lp-thinking {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.lp-chat[data-phase="thinking"] .lp-thinking {
+  opacity: 1;
+  transform: none;
+}

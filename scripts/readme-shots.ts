@@ -6,13 +6,15 @@
 //   - opens only https://cruzado-demo.vercel.app and aborts any request to another host;
 //   - refuses to take a picture unless the page shows the notice "Você está vendo dados de exemplo.";
 //   - starts from a clean browser, without cookies or saved sessions.
-// scripts/export-public.ts lets through only the PNGs of docs/readme/, which come from here.
-import { mkdirSync } from "node:fs";
+// scripts/export-public.ts lets through only the PNGs of docs/readme/ and src/components/landing/img/, which come from here.
+import { copyFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { chromium, devices, type Page } from "@playwright/test";
 
 export const DEMO = "https://cruzado-demo.vercel.app";
 const OUT = path.resolve(import.meta.dirname, "../docs/readme");
+// The landing page shows the same phone screen. docs/ never reaches the Vercel build (.vercelignore), so it gets a copy.
+const LANDING = path.resolve(import.meta.dirname, "../src/components/landing/img/inicio-celular.png");
 const NOTICE = "Você está vendo dados de exemplo.";
 
 const VIEWS = [
@@ -70,6 +72,8 @@ async function main() {
       }
       await context.close();
     }
+    copyFileSync(path.join(OUT, "inicio-celular.png"), LANDING);
+    console.log(path.relative(process.cwd(), LANDING));
   } finally {
     await browser.close();
   }

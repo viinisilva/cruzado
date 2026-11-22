@@ -39,8 +39,8 @@ describe("isExcluded", () => {
 });
 
 describe("isReviewedImage", () => {
-  it.each(["docs/readme/inicio-celular.png", "docs/readme/cartoes-1440.png"])("lets %s through", (f) => expect(isReviewedImage(f)).toBe(true));
-  it.each(["docs/readme/a.jpg", "docs/readme/sub/a.png", "docs/redesign/a.png", "public/docs/readme/a.png", "docs/readme/../x.png"])("still blocks %s", (f) => expect(isReviewedImage(f)).toBe(false));
+  it.each(["docs/readme/inicio-celular.png", "docs/readme/cartoes-1440.png", "src/components/landing/img/inicio-celular.png"])("lets %s through", (f) => expect(isReviewedImage(f)).toBe(true));
+  it.each(["docs/readme/a.jpg", "docs/readme/sub/a.png", "docs/redesign/a.png", "public/docs/readme/a.png", "docs/readme/../x.png", "src/components/landing/img/sub/a.png", "src/components/a.png"])("still blocks %s", (f) => expect(isReviewedImage(f)).toBe(false));
 });
 
 describe("isPng", () => {

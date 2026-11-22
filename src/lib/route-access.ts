@@ -6,6 +6,9 @@ export type RouteAccess = "allow" | "login" | "unauthorized";
 /** Pages anyone can open. */
 export const PUBLIC_PAGES = new Set(["/", "/entrar", "/cadastro", "/privacidade", "/termos"]);
 
+/** Files Next.js generates for the landing page (src/app/opengraph-image.tsx): the preview shown when "/" is shared. */
+export const PUBLIC_FILES = new Set(["/opengraph-image"]);
+
 /** APIs that authenticate with their own secret instead of the session cookie. */
 export const SELF_AUTHENTICATED_APIS = ["/api/cron/", "/api/webhooks/", "/api/whatsapp/webhook", "/api/mcp"];
 
@@ -13,7 +16,7 @@ export function routeAccess(pathname: string, opts: { hasSession: boolean; demo:
   // The public demonstration has no login: every visitor is the demo account, and it refuses writes on its own.
   if (opts.demo || opts.hasSession) return "allow";
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  if (PUBLIC_PAGES.has(path)) return "allow";
+  if (PUBLIC_PAGES.has(path) || PUBLIC_FILES.has(path)) return "allow";
   if (path.startsWith("/api/")) return SELF_AUTHENTICATED_APIS.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p || path.startsWith(`${p}/`))) ? "allow" : "unauthorized";
   return "login";
 }

@@ -7,7 +7,7 @@ export function Logo({ withText = true }: { withText?: boolean }) {
         <circle cx="16" cy="16" r="11.5" fill="var(--accent)" />
         <path d="M20.3 12.4A5.6 5.6 0 1 0 20.3 19.6" fill="none" stroke="var(--hero)" strokeWidth="2.8" strokeLinecap="round" />
       </svg>
-      {withText ? <span className="text-xl font-semibold tracking-tight">Cruzado</span> : null}
+      {withText ? <span className="text-xl font-semibold tracking-tight" translate="no">Cruzado</span> : null}
     </span>
   );
 }

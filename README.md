@@ -2,7 +2,7 @@
 
 Agente de finanças pessoais **somente leitura, open source e self-hosted**, feito para o celular. Ele lê contas e cartões pelo Open Finance ou por extratos, responde perguntas em português e avisa quando algo foge do normal. Todo número que mostra tem como ser conferido, até as transações que o sustentam.
 
-**[Abrir a demonstração](https://cruzado-demo.vercel.app)** — dados inventados, sem login e sem nada salvo.
+**[Abrir a demonstração](https://cruzado-demo.vercel.app)** — dados inventados, sem login e sem nada salvo. A apresentação do projeto fica em [cruzado.vercel.app](https://cruzado.vercel.app).
 
 O nome vem do Cruzado, a moeda brasileira de 1986.
 
@@ -55,11 +55,12 @@ O nome vem do Cruzado, a moeda brasileira de 1986.
 - **Fila no próprio PostgreSQL**, com `FOR UPDATE SKIP LOCKED` e chave de deduplicação, sem serviço externo.
 - **O mesmo SQL em todo lugar.** PostgreSQL em produção e PGlite (PostgreSQL em WebAssembly) nos testes de integração, no modo local sem Docker e na demonstração pública, que monta o banco em memória a cada instância.
 - **Demonstração sem nenhuma credencial.** O deploy da demo recusa subir se encontrar variáveis de banco, IA ou bancos, e qualquer escrita é recusada no servidor.
-- **Testes:** cerca de 720 testes de unidade e integração (Vitest, com banco real em memória) e 140 de ponta a ponta (Playwright, no celular e no computador).
+- **Landing page estática e animada.** A página inicial é gerada no build, sem banco nem sessão. As animações usam CSS scroll-driven animations e pequenas ilhas com Motion, só em `transform` e `opacity`, com versão sem movimento para quem prefere menos animação. O JavaScript próprio da página tem cerca de 23 KB comprimidos, e o Lighthouse no celular deu 100 em desempenho, acessibilidade, boas práticas e SEO.
+- **Testes:** cerca de 730 testes de unidade e integração (Vitest, com banco real em memória) e 150 de ponta a ponta (Playwright, no celular e no computador).
 
 ## Stack
 
-Next.js 16 (App Router, Server Actions) · React 19 · TypeScript estrito · Tailwind CSS 4 · PostgreSQL (Neon) e PGlite · Drizzle ORM · Zod 4 · Vitest · Playwright · Vercel · Pluggy (Open Finance) · Model Context Protocol · provedores de IA trocáveis (local por padrão, Anthropic ou Ollama).
+Next.js 16 (App Router, Server Actions) · React 19 · TypeScript estrito · Tailwind CSS 4 · Motion · PostgreSQL (Neon) e PGlite · Drizzle ORM · Zod 4 · Vitest · Playwright · Vercel · Pluggy (Open Finance) · Model Context Protocol · provedores de IA trocáveis (local por padrão, Anthropic ou Ollama).
 
 ## Arquitetura
 
@@ -89,7 +90,7 @@ npm run build
 npm start
 ```
 
-Abra http://localhost:3000 e entre no modo demonstração. Sem `DATABASE_URL`, o app usa um PGlite em `.data/pglite` e aplica as migrações sozinho. Para desenvolvimento com recarga: `npm run dev`.
+Abra http://localhost:3000: a página inicial apresenta o projeto, e o app fica em http://localhost:3000/entrar, onde dá para entrar no modo demonstração. Sem `DATABASE_URL`, o app usa um PGlite em `.data/pglite` e aplica as migrações sozinho. Para desenvolvimento com recarga: `npm run dev`.
 
 **A demonstração pública, localmente,** sem nenhuma credencial e com o banco em memória (precisa do `npm run build` antes):
 
@@ -176,14 +177,14 @@ Apache-2.0. Veja [LICENSE](LICENSE), [NOTICE.md](NOTICE.md) e [THIRD_PARTY_LICEN
 
 **Cruzado** is a read-only, self-hosted personal finance agent for Brazil, built mobile-first. It reads accounts and credit cards through Open Finance (Pluggy) or bank statements (CSV/OFX), answers questions in Portuguese and raises alerts. Every number links back to the transactions behind it.
 
-**[Try the demo](https://cruzado-demo.vercel.app)** — invented data, no login, nothing is saved.
+**[Try the demo](https://cruzado-demo.vercel.app)** — invented data, no login, nothing is saved. Project page: [cruzado.vercel.app](https://cruzado.vercel.app).
 
 - **The AI model never does math.** It picks a Zod-validated tool and writes the answer; totals come from pure TypeScript functions using integer cents, and each answer carries its evidence (period, filters, links).
 - **Card bills that match the bank:** billing cycles are calibrated from the bank's closed bills, and a reconciliation step explains each difference.
 - **Agents are data, not code:** validated rules, fixed schedules, idempotent runs, and a job queue inside PostgreSQL (`FOR UPDATE SKIP LOCKED`).
 - **Same SQL everywhere:** PostgreSQL in production, PGlite (Postgres in WebAssembly) for integration tests, local runs and the public demo.
-- **Tested:** about 720 unit and integration tests (Vitest, real in-memory database) and 140 end-to-end tests (Playwright, phone and desktop).
-- **Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, PostgreSQL/Neon, Drizzle, Zod, Vercel, Model Context Protocol.
+- **Tested:** about 730 unit and integration tests (Vitest, real in-memory database) and 150 end-to-end tests (Playwright, phone and desktop).
+- **Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, Motion, PostgreSQL/Neon, Drizzle, Zod, Vercel, Model Context Protocol.
 - **Status:** working for a single owner. Per-user isolation for invited users is in progress.
 
 **Author:** Vinicius Silva, Information Systems student. [LinkedIn](https://www.linkedin.com/in/viinicius-silva) · [GitHub](https://github.com/viinisilva)

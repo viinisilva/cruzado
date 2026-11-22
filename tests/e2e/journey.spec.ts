@@ -39,9 +39,9 @@ test("whole journey of a new user", async ({ page }) => {
   const password = "uma-senha-longa-123";
   const newPassword = "outra-senha-forte-456";
 
-  await test.step("visitor is sent to login", async () => {
+  await test.step("visitor sees the landing page, and the app sends to login", async () => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/entrar/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seu dinheiro, com a prova de cada número.");
     await page.goto("/inicio");
     await expect(page).toHaveURL(/\/entrar/);
     await page.goto("/termos");

@@ -3,7 +3,9 @@
 import { expect, test } from "@playwright/test";
 
 test("opens straight on the dashboard, with the notice and no login", async ({ page, context }) => {
-  await page.goto("/");
+  // On its deployment "/" redirects to the opening page, a build-time switch (tests/unit/next-config.test.ts). These local
+  // servers share the app's build, where "/" is the landing page, so the visit starts at the dashboard itself.
+  await page.goto("/inicio");
   await expect(page).toHaveURL(/\/inicio$/);
   await expect(page.getByText("Você está vendo dados de exemplo.")).toBeVisible();
   await expect(page.getByRole("heading", { name: /Olá, Ana/ })).toBeVisible();

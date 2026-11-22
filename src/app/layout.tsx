@@ -6,6 +6,8 @@ import "@fontsource/ibm-plex-sans/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Absolute links for the preview image of "/" (opengraph-image.tsx).
+  metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
   title: { default: "Cruzado", template: "%s · Cruzado" },
   description: "Agente de finanças pessoais open source, self-hosted e somente leitura.",
   robots: { index: false, follow: false },
