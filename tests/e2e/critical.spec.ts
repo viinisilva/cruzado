@@ -19,7 +19,7 @@ test("demo: dashboard, hide values and navigation", async ({ page, isMobile }) =
   await expect(balance).toContainText("R$");
   // Five destinations on the mobile bottom bar; the sidebar has room for Contas e cartões as a sixth.
   const nav = page.getByRole("navigation", { name: "Principal" }).filter({ visible: true });
-  await expect(nav.getByRole("link")).toHaveCount(isMobile ? 5 : 6);
+  await expect(nav.getByRole("link")).toHaveCount(isMobile ? 5 : 10);
   if (isMobile) {
     const box = await nav.boundingBox();
     expect(box!.y).toBeGreaterThan(600);
@@ -90,14 +90,14 @@ test("OFX import preview", async ({ page }) => {
 test("agent from natural language requires confirmation", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/agentes");
-  await page.getByLabel("Descreva o agente").fill("me avise quando eu gastar mais de R$ 120 por dia com transporte");
+  await page.getByLabel("Do que você quer ser avisado?").fill("me avise quando eu gastar mais de R$ 120 por dia com transporte");
   await page.getByRole("button", { name: "Gerar rascunho" }).click();
   await expect(page.getByText("Rascunho criado a partir do seu pedido")).toBeVisible();
   const draft = page.getByRole("region", { name: "Limite diário com Transporte" });
-  await expect(draft.getByText("Rascunho — aguardando confirmação")).toBeVisible();
+  await expect(draft.getByText("Esperando a sua confirmação")).toBeVisible();
   await expect(draft.getByText(/R\$ 120,00/)).toBeVisible();
   await draft.getByRole("button", { name: "Confirmar e ativar" }).click();
-  await expect(page.getByRole("region", { name: "Limite diário com Transporte" }).getByText("Ativo", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Limite diário com Transporte" }).getByText("Ligado", { exact: true })).toBeVisible();
 });
 
 test("signup shows field errors next to inputs, then creates the account", async ({ page }) => {
@@ -144,7 +144,7 @@ test("settings tabs show one section at a time", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/configuracoes");
   await expect(page.getByRole("heading", { name: "Contas e cartões" })).toBeVisible();
-  await page.getByRole("link", { name: "Categorias" }).click();
+  await page.locator("main").getByRole("link", { name: "Categorias" }).click();
   await expect(page.getByText("Usadas para organizar seus gastos e receitas.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Contas e cartões" })).toHaveCount(0);
 });
@@ -176,9 +176,12 @@ test("two-step verification: enable it, then login needs the code", async ({ pag
   await page.getByLabel("E-mail").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByText("E-mail, senha ou código incorretos.")).toBeVisible();
-
-  await page.locator("#password").fill(password);
+  // Second step: only the code is asked, and a wrong one says so.
+  await expect(page.getByText(/Sua conta tem verificação em duas etapas/)).toBeVisible();
+  await expect(page.locator("#password")).toHaveCount(0);
+  await page.getByLabel("Código de verificação").fill("000000");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await expect(page.getByText(/Código incorreto/)).toBeVisible();
   await page.getByLabel("Código de verificação").fill(totpCode(secret, step + 1));
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/inicio$/);

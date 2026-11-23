@@ -53,7 +53,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
             <ul className="mt-3 flex flex-col gap-2.5 text-sm text-muted">
               <li>Os valores são calculados pelo Cruzado com os seus dados, não inventados pelo modelo.</li>
               <li>Abaixo de cada resposta, “De onde vêm estes números” mostra período, contas, categorias e as transações usadas.</li>
-              <li>Pedidos de aviso viram rascunho de agente: nada é ativado sem a sua confirmação.</li>
+              <li>Pedidos de aviso viram um rascunho em Meus avisos: nada começa sem a sua confirmação.</li>
             </ul>
           </section>
           <details className="rounded-2xl border border-border bg-surface px-4 text-sm text-muted shadow-card xl:px-5">

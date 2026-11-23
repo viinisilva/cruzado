@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import * as s from "@/db/schema";
 import { decryptSecret, encryptSecret, hashPassword, needsRehash, verifyPassword } from "@/lib/auth/crypto";
 import { generateTotpSecret, totpCode, verifyTotp } from "@/lib/auth/totp";
-import { SignupInput, authenticate, changePassword, consumeTotp, createDemoUser, createSession, createUser, totpContext, userForSessionToken } from "@/lib/auth/users";
+import { SignupInput, signIn, changePassword, consumeTotp, createDemoUser, createSession, createUser, totpContext, userForSessionToken } from "@/lib/auth/users";
 import { TokenLimitError, createMcpToken, revokeMcpToken, userForMcpToken } from "@/lib/mcp/tokens";
 import { answer, userWantsAgent } from "@/lib/chat/engine";
 import { sanitizeUntrusted } from "@/lib/text";
@@ -45,11 +45,11 @@ describe("TOTP", () => {
     const secret = generateTotpSecret();
     await db.update(s.users).set({ totpSecret: encryptSecret(secret, totpContext(id)), totpEnabledAt: new Date() }).where(eq(s.users.id, id));
     const password = "senha-de-teste-123";
-    expect(await authenticate(db, { email, password })).toBeNull();
-    expect(await authenticate(db, { email, password, code: "000000" })).toBeNull();
+    expect(await signIn(db, { email, password })).toEqual({ status: "code-required" });
+    expect(await signIn(db, { email, password, code: "000000" })).toEqual({ status: "wrong-code" });
     const code = totpCode(secret, Math.floor(Date.now() / 30_000));
-    expect(await authenticate(db, { email, password, code })).toBe(id);
-    expect(await authenticate(db, { email, password, code })).toBeNull();
+    expect(await signIn(db, { email, password, code })).toEqual({ status: "ok", userId: id });
+    expect(await signIn(db, { email, password, code })).toEqual({ status: "wrong-code" });
   }, 20_000);
 
   it("gives one winner when the same code is used concurrently", async () => {
@@ -75,7 +75,7 @@ describe("passwords", () => {
     const salt = randomBytes(16);
     const key = scryptSync("senha-de-teste-123", salt, 64, { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 });
     await db.update(s.users).set({ passwordHash: `scrypt$32768$8$1$${salt.toString("base64url")}$${key.toString("base64url")}` }).where(eq(s.users.id, id));
-    expect(await authenticate(db, { email, password: "senha-de-teste-123" })).toBe(id);
+    expect(await signIn(db, { email, password: "senha-de-teste-123" })).toEqual({ status: "ok", userId: id });
     expect(needsRehash((await row(id)).passwordHash)).toBe(false);
   }, 20_000);
 
@@ -96,7 +96,7 @@ describe("passwords", () => {
     const id = await createDemoUser(db);
     const { email, passwordHash } = await row(id);
     expect(await verifyPassword("", passwordHash)).toBe(false);
-    expect(await authenticate(db, { email, password: "qualquer" })).toBeNull();
+    expect(await signIn(db, { email, password: "qualquer" })).toEqual({ status: "invalid" });
   });
 });
 

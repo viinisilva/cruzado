@@ -22,7 +22,7 @@ function Evidence({ ev }: { ev: AssistantEvidence }) {
   return (
     <div className="mt-4 flex flex-col gap-2 border-t border-border pt-3 text-sm">
       {ev.draftAgentId ? (
-        <Notice tone="attention" title="Rascunho de agente criado — ainda não está ativo">
+        <Notice tone="attention" title="Aviso criado como rascunho: ainda não está ligado">
           <Link className="font-medium text-primary underline" href={`/agentes?rascunho=${ev.draftAgentId}`}>
             Revisar e confirmar o agente
           </Link>

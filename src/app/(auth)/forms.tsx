@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { demoAction, loginAction, signupAction, type FormState } from "../actions/auth";
 import { Button, Field, FormError, Input } from "@/components/ui";
@@ -25,8 +25,31 @@ export function DemoButton() {
   );
 }
 
+/**
+ * Login in two steps. First e-mail and password; only an account with two-step verification gets a second screen
+ * asking for the code. The password stays in memory between the steps and goes back in a hidden field; the e-mail
+ * comes back from the server.
+ */
 export function LoginForm({ canSignup }: { canSignup: boolean }) {
   const [state, action] = useActionState(loginAction, {});
+  const [password, setPassword] = useState("");
+  if (state.needsCode) {
+    return (
+      <form action={action} className="flex flex-col gap-4" noValidate>
+        <FormError message={state.error} />
+        <p className="text-base">Sua conta tem verificação em duas etapas. Digite o código de 6 números que aparece no seu app autenticador.</p>
+        <input type="hidden" name="email" value={state.values?.email ?? ""} />
+        <input type="hidden" name="password" value={password} />
+        <Field label="Código de verificação" htmlFor="code">
+          <Input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" spellCheck={false} maxLength={6} required />
+        </Field>
+        <Submit>Entrar</Submit>
+        <a href="/entrar" className="text-sm font-medium text-primary underline underline-offset-2">
+          Voltar e usar outra conta
+        </a>
+      </form>
+    );
+  }
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       <FormError message={state.error} />
@@ -34,10 +57,7 @@ export function LoginForm({ canSignup }: { canSignup: boolean }) {
         <Input id="email" name="email" type="email" autoComplete="email" spellCheck={false} required defaultValue={state.values?.email} {...aria(state, "email")} />
       </Field>
       <Field label="Senha" htmlFor="password" error={err(state, "password")}>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required {...aria(state, "password")} />
-      </Field>
-      <Field label="Código de verificação" htmlFor="code" hint="Só se você ativou a verificação em duas etapas.">
-        <Input id="code" name="code" inputMode="numeric" autoComplete="one-time-code" spellCheck={false} maxLength={6} />
+        <Input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} {...aria(state, "password")} />
       </Field>
       <Submit>Entrar</Submit>
       {canSignup ? (

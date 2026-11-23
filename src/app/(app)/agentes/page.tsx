@@ -12,9 +12,9 @@ import { ConfirmSubmit, PrivateBlock, SensitiveText } from "@/components/client"
 import { confirmAgentAction, deleteAgentAction, pauseAgentAction, resumeAgentAction, runAgentNowAction } from "../../actions/agents";
 import { AgentRuleForm, NaturalLanguageAgentForm } from "./forms";
 
-export const metadata: Metadata = { title: "Agentes" };
+export const metadata: Metadata = { title: "Avisos" };
 
-const STATUS = { draft: { label: "Rascunho — aguardando confirmação", tone: "attention" }, active: { label: "Ativo", tone: "positive" }, paused: { label: "Pausado", tone: "neutral" } } as const;
+const STATUS = { draft: { label: "Esperando a sua confirmação", tone: "attention" }, active: { label: "Ligado", tone: "positive" }, paused: { label: "Pausado", tone: "neutral" } } as const;
 
 // Goals people recognize. Each one only fills the form: the agent is created as a draft for review.
 const TEMPLATES = [
@@ -49,8 +49,8 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
           </div>
           <p className="mb-3 text-meta text-muted">
             {KIND_LABEL[a.kind]}
-            {a.origin === "natural_language" ? " · criado a partir de linguagem natural" : ""}
-            {a.lastRunAt ? ` · última execução ${a.lastRunAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` : ""}
+            {a.origin === "natural_language" ? " · criado com as suas palavras" : ""}
+            {a.lastRunAt ? ` · conferido pela última vez em ${a.lastRunAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}` : ""}
           </p>
           {a.sourceText ? <p className="mb-2 text-sm italic text-muted">Pedido: “<SensitiveText>{a.sourceText}</SensitiveText>”</p> : null}
           <ul className="mb-4 flex flex-col gap-1 rounded-xl bg-surface-2 p-3.5 pl-8 text-[0.9375rem] list-disc marker:text-primary">
@@ -69,7 +69,7 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
               <>
                 <form action={runAgentNowAction}>
                   <input type="hidden" name="id" value={a.id} />
-                  <Button type="submit" variant="secondary">Executar agora</Button>
+                  <Button type="submit" variant="secondary">Conferir agora</Button>
                 </form>
                 <form action={pauseAgentAction}>
                   <input type="hidden" name="id" value={a.id} />
@@ -85,13 +85,13 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
             ) : null}
             <form action={deleteAgentAction}>
               <input type="hidden" name="id" value={a.id} />
-              {a.status === "draft" ? <Button type="submit" variant="danger">Descartar</Button> : <ConfirmSubmit confirmLabel="Sim, excluir agente">Excluir</ConfirmSubmit>}
+              {a.status === "draft" ? <Button type="submit" variant="danger">Descartar</Button> : <ConfirmSubmit confirmLabel="Sim, excluir aviso">Excluir</ConfirmSubmit>}
             </form>
           </div>
           <details className="mt-3">
             <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-primary">Editar</summary>
             <div className="mt-3">
-              <PrivateBlock fallback="Mostre os valores para editar este agente.">
+              <PrivateBlock fallback="Mostre os valores para editar este aviso.">
                 <AgentRuleForm
                   categories={expenseCats}
                   accounts={accounts}
@@ -109,7 +109,7 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
             </div>
           </details>
           {a.status !== "draft" ? (
-            <Link href="/alertas" className={linkCls}>Ver alertas</Link>
+            <Link href="/alertas" className={linkCls}>Ver notificações deste tipo</Link>
           ) : null}
         </Card>
       </li>
@@ -118,7 +118,7 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Agentes" description="Eles acompanham seus dados e avisam quando algo merece atenção. Nada é ativado sem a sua confirmação." />
+      <PageHeader title="Meus avisos" description="Aqui você escolhe do que quer ser avisado. Os avisos que já chegaram ficam em Notificações. Nenhum aviso começa sem a sua confirmação." />
       {drafts.length ? (
         <section className="mb-10" aria-labelledby="drafts">
           <h2 id="drafts" className="mb-4 text-xl font-semibold tracking-tight">Para revisar</h2>
@@ -127,17 +127,17 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
       ) : null}
 
       <section className="mb-10" aria-labelledby="mine">
-        <h2 id="mine" className="mb-4 text-xl font-semibold tracking-tight">Seus agentes</h2>
+        <h2 id="mine" className="mb-4 text-xl font-semibold tracking-tight">Seus avisos</h2>
         {others.length ? (
           <ul className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">{others.map(renderAgent)}</ul>
         ) : (
-          <EmptyState title="Nenhum agente ativo ainda">Comece por um dos objetivos abaixo.</EmptyState>
+          <EmptyState title="Nenhum aviso ligado ainda">Comece por um dos objetivos abaixo.</EmptyState>
         )}
       </section>
 
       <section className="mb-10" aria-labelledby="modelos">
         <h2 id="modelos" className="text-xl font-semibold tracking-tight">O que você quer acompanhar?</h2>
-        <p className="mb-4 mt-1 text-sm text-muted">Escolha um objetivo. O formulário já vem preenchido e o agente nasce como rascunho.</p>
+        <p className="mb-4 mt-1 text-sm text-muted">Escolha um objetivo. O formulário já vem preenchido, e o aviso só começa depois que você confirmar.</p>
         <ul className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
           {TEMPLATES.map((t) => {
             const Icon = t.icon;
@@ -159,14 +159,14 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
       {template ? (
         <Card id="novo" aria-labelledby="h-modelo" className="mb-6 max-w-4xl scroll-mt-20">
           <CardTitle id="h-modelo">{template.title}</CardTitle>
-          <p className="mb-3 text-sm text-muted">Ajuste se quiser. Isto cria um rascunho: você revisa e confirma antes de ativar.</p>
+          <p className="mb-3 text-sm text-muted">Ajuste se quiser. Isto cria um rascunho: você revisa e confirma antes de ligar.</p>
           <AgentRuleForm key={template.id} categories={expenseCats} accounts={accounts} initial={{ name: template.name, kind: template.kind, threshold: "threshold" in template ? template.threshold : undefined }} />
         </Card>
       ) : null}
 
       <Card aria-labelledby="nl" className="mb-4 max-w-4xl">
         <CardTitle id="nl">Pedir com suas palavras</CardTitle>
-        <p className="mb-3 text-sm text-muted">Você revisa o resumo antes de ativar.</p>
+        <p className="mb-3 text-sm text-muted">Você revisa o resumo antes de ligar.</p>
         <NaturalLanguageAgentForm />
       </Card>
 

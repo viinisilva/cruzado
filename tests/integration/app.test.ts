@@ -11,7 +11,7 @@ import { commitImport, previewImport } from "@/lib/importer";
 import { confirmAgent, createAgentDraft, deleteAgent, listAgents, processJobs, enqueueDueAgents, runAgent, setAgentPaused } from "@/lib/agents/service";
 import { createMcpToken, revokeMcpToken, userForMcpToken } from "@/lib/mcp/tokens";
 import { handleMcpRequest, MCP_TOOLS } from "@/lib/mcp/server";
-import { authenticate, createDemoUser, deleteUserData } from "@/lib/auth/users";
+import { signIn, createDemoUser, deleteUserData } from "@/lib/auth/users";
 import { generateDemoTransactions } from "@/lib/demo/seed";
 
 type DB = Awaited<ReturnType<typeof testDb>>;
@@ -294,8 +294,8 @@ describe("MCP (read-only)", () => {
 
 describe("accounts and data lifecycle", () => {
   it("authenticates with password and rejects wrong ones", async () => {
-    expect(await authenticate(db, { email: "ana@exemplo.test", password: "senha-de-teste-123" })).toBe(ana.userId);
-    expect(await authenticate(db, { email: "ana@exemplo.test", password: "errada" })).toBeNull();
+    expect(await signIn(db, { email: "ana@exemplo.test", password: "senha-de-teste-123" })).toEqual({ status: "ok", userId: ana.userId });
+    expect(await signIn(db, { email: "ana@exemplo.test", password: "errada" })).toEqual({ status: "invalid" });
     const [u] = await db.select().from(s.users).where(eq(s.users.id, ana.userId));
     expect(u!.passwordHash.startsWith("scrypt$")).toBe(true);
   });

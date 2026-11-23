@@ -109,7 +109,10 @@ function SolverNotice({ solver, rows }: { solver: SolverResult; rows: CheckRow[]
   );
 }
 
-function Rows({ rows, reason, empty }: { rows: (CheckRow & { reason?: IncludedReason | ExcludedReason })[]; reason: boolean; empty: string }) {
+/** Reasons that are simply how a bill works: not repeated on every row. */
+const USUAL = new Set<IncludedReason | ExcludedReason>(["date", "bill"]);
+
+function Rows({ rows, reason, empty, open }: { rows: (CheckRow & { reason?: IncludedReason | ExcludedReason })[]; reason: boolean; empty: string; open?: boolean }) {
   if (!rows.length) return <p className="text-sm text-muted">{empty}</p>;
   return (
     <ul className="divide-y divide-border">
@@ -127,7 +130,7 @@ function Rows({ rows, reason, empty }: { rows: (CheckRow & { reason?: IncludedRe
               <Sensitive>{r.amountCents > 0 ? `− ${formatBRL(r.amountCents)}` : formatBRL(-r.amountCents)}</Sensitive>
             </p>
           </div>
-          {reason && r.reason ? <p className="mt-1 text-sm text-muted">{REASON[r.reason]}</p> : null}
+          {reason && r.reason && !USUAL.has(r.reason) ? <p className="mt-1 text-sm text-muted">{REASON[r.reason]}</p> : null}
           {r.decision ? (
             <p className="mt-1 text-sm text-muted">
               <strong className="font-semibold text-text">{KIND[r.decision.kind]}</strong>: {r.decision.why}
@@ -135,9 +138,10 @@ function Rows({ rows, reason, empty }: { rows: (CheckRow & { reason?: IncludedRe
               {r.chosenByUser ? " A categoria foi escolhida por você e não muda sozinha." : ""}
             </p>
           ) : null}
-          {r.flags.length ? (
+          {/* In an open bill almost everything is still pending at the bank: that is the rule, not news. */}
+          {r.flags.filter((f) => !(open && f === "pending")).length ? (
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {r.flags.map((f) => <Badge key={f} tone={FLAG[f].tone}>{FLAG[f].label}</Badge>)}
+              {r.flags.filter((f) => !(open && f === "pending")).map((f) => <Badge key={f} tone={FLAG[f].tone}>{FLAG[f].label}</Badge>)}
             </div>
           ) : null}
         </li>
@@ -181,6 +185,18 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
   }
   const st = check.statement;
   const gap = st.bankTotalCents !== null ? st.bankTotalCents - st.computedCents : null;
+  const monthName = formatMonthYear(`${month}-01`);
+  const money = (c: number) => <Sensitive>{formatBRL(c)}</Sensitive>;
+  const summary =
+    st.status === "open" ? (
+      <>Até agora, a fatura de {monthName} soma <strong>{money(st.computedCents)}</strong>. Ela ainda está aberta: {st.closingSource === "fixed" ? `fecha no dia ${check.closingDay}` : `fecha ${closingText(st)}`} e vence em {formatDayMonth(st.dueDate, today)}. O total pode mudar até o fechamento.</>
+    ) : st.bankTotalCents === null ? (
+      <>A fatura de {monthName} fechou em <strong>{money(st.computedCents)}</strong>, pela soma dos lançamentos. O banco não informou o total desta fatura.</>
+    ) : gap === 0 ? (
+      <>A fatura de {monthName} fechou em <strong>{money(st.computedCents)}</strong>, o mesmo valor que o banco informou.</>
+    ) : (
+      <>Os lançamentos da fatura de {monthName} somam <strong>{money(st.computedCents)}</strong>, mas o banco informou <strong>{money(st.bankTotalCents)}</strong>. A diferença é de {money(Math.abs(gap!))}, e o motivo provável está logo abaixo.</>
+    );
 
   return (
     <>
@@ -192,8 +208,9 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
               <h2 id="resumo" className="text-lg font-semibold first-letter:uppercase">Fatura de {formatMonthYear(`${month}-01`)}</h2>
               <p className="text-sm text-muted">Compras de {short(st.cycle.from)} a {short(st.cycle.to)} · {st.dueDate < today ? "venceu" : "vence"} em {formatDayMonth(st.dueDate, today)}</p>
             </div>
-            {st.status === "open" ? <Badge tone="attention">Aberta</Badge> : <Badge>Fechada</Badge>}
+            {st.status === "open" ? <Badge tone="attention">Aberta</Badge> : gap === 0 ? <Badge tone="positive">Bate com o banco</Badge> : <Badge>Fechada</Badge>}
           </div>
+          <p className="mt-3 max-w-prose text-base leading-relaxed">{summary}</p>
           <dl className="mt-4 grid gap-2 text-[0.9375rem] sm:max-w-md">
             <div className="flex justify-between gap-3"><dt className="text-muted">Compras e tarifas</dt><dd className="tabular-nums"><Sensitive>{formatBRL(check.chargesCents)}</Sensitive></dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">Créditos descontados</dt><dd className="tabular-nums"><Sensitive>− {formatBRL(check.creditsCents)}</Sensitive></dd></div>
@@ -205,15 +222,20 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
               </>
             ) : null}
           </dl>
+          <details className="group mt-4 rounded-xl border border-border bg-surface-2 px-4 open:pb-3">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold [&::-webkit-details-marker]:hidden">
+              Como calculamos?
+              <span aria-hidden className="text-xl leading-none text-primary transition-transform group-open:rotate-45 motion-reduce:transition-none">+</span>
+            </summary>
           {st.closingSource === "fixed" ? (
-            <p className="mt-4 text-sm text-muted">
+            <p className="text-sm text-muted">
               Fechamento no dia {check.closingDay}, vencimento no dia {check.dueDay}.{" "}
               {check.closingDaySource === "estimated" ? (
                 <>O dia de fechamento é uma <strong className="font-semibold text-text">estimativa</strong>, porque o banco não enviou nenhuma fatura. <Link href="/configuracoes?aba=contas" className={link}>Informe o dia certo</Link> para as compras caírem na fatura certa.</>
               ) : check.closingDaySource === "user" ? "Dia informado por você." : check.closingDaySource === "bank" ? "Dia informado pelo banco." : null}
             </p>
           ) : (
-            <div className="mt-4 grid gap-1 text-sm text-muted">
+            <div className="grid gap-1 text-sm text-muted">
               <p>
                 {st.closingSource === "bank"
                   ? `Fechou ${closingText(st)}, data informada pelo banco.`
@@ -224,6 +246,12 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
               </p>
             </div>
           )}
+          {st.status === "open" ? (
+            <p className="mt-2 text-sm text-muted">
+              O banco só informa o total depois do fechamento, então uma fatura aberta é a soma dos lançamentos. Parcelas que o banco já lançou com data futura entram aqui e só contam nos gastos quando a data chegar.
+            </p>
+          ) : null}
+          </details>
         </Card>
 
         {check.divergence ? (
@@ -238,30 +266,32 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
             <Sensitive>{formatBRL(check.suspectPaymentsCents)}</Sensitive> em créditos têm texto de pagamento de fatura e estão sendo descontados desta fatura. Se forem mesmo pagamentos, mude a categoria deles para &quot;Pagamento de fatura&quot;.
           </Notice>
         ) : null}
-        {st.status === "open" ? (
-          <Notice tone="info" title="Fatura aberta">
-            O banco só informa o total depois do fechamento, então esta fatura é a soma dos lançamentos. Parcelas que o banco já lançou com data futura entram aqui e só contam nos gastos quando a data chegar.
-          </Notice>
-        ) : null}
 
         <Card aria-labelledby="entram">
           <h2 id="entram" className="mb-3 text-lg font-semibold">Entram na fatura ({check.included.length})</h2>
-          <Rows rows={check.included} reason empty="Nenhum lançamento nesta fatura." />
+          <Rows rows={check.included} reason open={st.status === "open"} empty="Nenhum lançamento nesta fatura." />
         </Card>
 
-        <Card aria-labelledby="fora">
-          <h2 id="fora" className="mb-1 text-lg font-semibold">Ficaram de fora ({check.excluded.length})</h2>
-          <p className="mb-3 text-sm text-muted">Lançamentos deste cartão com data dentro do período que não somam na fatura.</p>
-          <Rows rows={check.excluded} reason empty="Nenhum." />
-        </Card>
+        {check.excluded.length ? (
+          <Card aria-labelledby="fora">
+            <h2 id="fora" className="mb-1 text-lg font-semibold">Ficaram de fora ({check.excluded.length})</h2>
+            <p className="mb-3 text-sm text-muted">Lançamentos deste cartão, com data dentro do período, que não somam na fatura.</p>
+            <Rows rows={check.excluded} reason empty="Nenhum." />
+          </Card>
+        ) : null}
 
-        <Card aria-labelledby="perto">
-          <h2 id="perto" className="mb-1 text-lg font-semibold">Perto do fechamento ({check.nearby.length})</h2>
-          <p className="mb-3 text-sm text-muted">
-            {plural(5, "dia", "dias")} antes e depois do período, sem fatura do banco. Se o app do banco mostra algum destes nesta fatura, o dia de fechamento está errado.
-          </p>
-          <Rows rows={check.nearby} reason={false} empty="Nenhum." />
-        </Card>
+        {check.nearby.length ? (
+          <details className="group rounded-2xl border border-border bg-surface p-4 sm:px-6">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-lg font-semibold [&::-webkit-details-marker]:hidden">
+              <span id="perto">Perto do fechamento ({check.nearby.length})</span>
+              <span aria-hidden className="text-xl leading-none text-primary transition-transform group-open:rotate-45 motion-reduce:transition-none">+</span>
+            </summary>
+            <p className="mb-3 text-sm text-muted">
+              {plural(5, "dia", "dias")} antes e depois do período, sem fatura do banco. Se o app do banco mostra algum destes nesta fatura, o dia de fechamento está errado.
+            </p>
+            <Rows rows={check.nearby} reason={false} open={st.status === "open"} empty="Nenhum." />
+          </details>
+        ) : null}
       </div>
     </>
   );

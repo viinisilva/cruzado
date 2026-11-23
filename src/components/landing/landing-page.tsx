@@ -176,7 +176,7 @@ function Features() {
         <BentoGlow className="lp-bento">
           <article className="lp-tile lp-tile-agents">
             <span className="lp-glow" aria-hidden />
-            <h3 className="lp-h3">Agentes que avisam</h3>
+            <h3 className="lp-h3">Avisos automáticos</h3>
             <p className="lp-body">
               Limite de gasto no dia, resumo da semana, cobrança que parece duplicada e comparação com o mês anterior. Você cria um aviso
               escrevendo o que quer, e ele só começa depois que você confirma.
@@ -268,7 +268,7 @@ function HowItWorks() {
   const steps = [
     { title: "Traga seus dados", text: "Conecte contas e cartões pelo Open Finance, ou importe extratos em CSV e OFX." },
     { title: "O Cruzado organiza e confere", text: "Categoriza, calibra o ciclo de cada cartão e confere as faturas com o total do banco." },
-    { title: "Pergunte e receba avisos", text: "Converse sobre seus gastos e deixe os agentes avisarem quando algo foge do normal." },
+    { title: "Pergunte e receba avisos", text: "Converse sobre seus gastos e receba um aviso quando algo foge do normal." },
   ];
   return (
     <section className="lp-section" aria-labelledby="como-title" style={{ paddingTop: 0 }}>

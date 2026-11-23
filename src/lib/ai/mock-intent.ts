@@ -98,7 +98,7 @@ export function parseIntent(text: string, ctx: { today: string; categories: { na
       const scope = cats.length ? ` com ${cats.join(", ")}` : "";
       return { calls: [{ name: "createAgentDraft", input: { ...base, name: `Limite diário${scope}`, kind: "daily_spend_limit", thresholdCents: amount } }] };
     }
-    return { clarify: "Posso criar agentes de quatro tipos: limite diário de gastos, resumo semanal, possível cobrança duplicada e comparação mensal. Qual deles você quer?" };
+    return { clarify: "Posso criar avisos de quatro tipos: limite diário de gastos, resumo semanal, possível cobrança duplicada e comparação mensal. Qual deles você quer?" };
   }
   if (/\bagentes?\b|alertas ativos/.test(t)) return { calls: [{ name: "listActiveAgents", input: {} }] };
   if (/duplic|cobrad[oa] duas vezes|cobranca repetida/.test(t)) return { calls: [{ name: "detectPossibleDuplicates", input: withPeriod({}) }] };

@@ -13,7 +13,9 @@ const statement = [
   `01-${month}-${year};Supermercado São João;2;-350,50;4649,50`,
 ].join("\n");
 
+/** "Sair" lives in "Mais" on a phone and in the sidebar on a computer; the "Mais" page has it on both. */
 async function logout(page: Page) {
+  await page.goto("/mais");
   await page.getByRole("button", { name: "Sair" }).filter({ visible: true }).first().click();
   await expect(page).toHaveURL(/\/entrar/);
 }
@@ -75,7 +77,7 @@ test("whole journey of a new user", async ({ page }) => {
     await page.goto("/transacoes");
     await expect(page.getByRole("heading", { name: "Transações", level: 1 })).toBeVisible();
     await page.goto("/agentes");
-    await expect(page.getByRole("heading", { name: "Agentes", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Meus avisos", level: 1 })).toBeVisible();
     await page.goto("/chat");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
@@ -130,12 +132,12 @@ test("whole journey of a new user", async ({ page }) => {
 
   await test.step("agent: draft, confirm, run", async () => {
     await page.goto("/agentes");
-    await page.getByLabel("Descreva o agente").fill("me avise quando eu gastar mais de R$ 100 por dia");
+    await page.getByLabel("Do que você quer ser avisado?").fill("me avise quando eu gastar mais de R$ 100 por dia");
     await page.getByRole("button", { name: "Gerar rascunho" }).click();
     await expect(page.getByText("Rascunho criado a partir do seu pedido")).toBeVisible();
     await page.getByRole("button", { name: "Confirmar e ativar" }).click();
-    await expect(page.getByRole("button", { name: "Executar agora" })).toBeVisible();
-    await page.getByRole("button", { name: "Executar agora" }).click();
+    await expect(page.getByRole("button", { name: "Conferir agora" })).toBeVisible();
+    await page.getByRole("button", { name: "Conferir agora" }).click();
   });
 
   await test.step("settings: every tab opens and works", async () => {
@@ -171,7 +173,7 @@ test("whole journey of a new user", async ({ page }) => {
     await expect(page.getByText("Senha trocada.")).toBeVisible();
     await logout(page);
     await login(page, email, password);
-    await expect(page.getByText("E-mail, senha ou código incorretos.")).toBeVisible();
+    await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
     await login(page, email, newPassword);
     await expect(page).toHaveURL(/\/inicio$/);
   });
@@ -187,7 +189,7 @@ test("whole journey of a new user", async ({ page }) => {
     await page.getByRole("button", { name: "Excluir minha conta e todos os dados" }).click();
     await expect(page).toHaveURL(/conta-excluida/);
     await login(page, email, newPassword);
-    await expect(page.getByText("E-mail, senha ou código incorretos.")).toBeVisible();
+    await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
   });
 
   // The 404 page above is requested on purpose, and the browser logs that status as a console error.

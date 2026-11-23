@@ -44,16 +44,17 @@ test("recurring page lists detected subscriptions as an estimate", async ({ page
   await expect(page.getByRole("list", { name: "Cobranças recorrentes" }).getByRole("listitem").first()).toBeVisible();
 });
 
-test("finance tabs reach the new views without sideways page scroll", async ({ page }) => {
+test("the one navigation reaches the other views without sideways page scroll", async ({ page, isMobile }) => {
   await enterDemo(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  const tabs = page.getByRole("navigation", { name: "Visões de finanças" });
-  await tabs.getByRole("link", { name: "Categorias" }).click();
+  const nav = page.getByRole("navigation", { name: "Principal" }).filter({ visible: true });
+  // On a phone the rest lives behind "Mais"; on a computer the sidebar lists it.
+  if (isMobile) await nav.getByRole("link", { name: "Mais" }).click();
+  await page.getByRole("link", { name: /^Categorias/ }).filter({ visible: true }).first().click();
   await expect(page).toHaveURL(/\/categorias$/);
-  await expect(tabs.getByRole("link", { name: "Categorias" })).toHaveAttribute("aria-current", "page");
+  if (isMobile) await expect(nav.getByRole("link", { name: "Mais" })).toHaveAttribute("aria-current", "page");
+  else await expect(nav.getByRole("link", { name: "Categorias" })).toHaveAttribute("aria-current", "page");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await tabs.getByRole("link", { name: "Recorrentes" }).click();
-  await expect(page).toHaveURL(/\/recorrentes$/);
 });
 
 test("hidden values leave no amount, percent or chart on the new views", async ({ page }) => {
@@ -102,21 +103,6 @@ test("pace chart axis labels are readable at any width", async ({ page }) => {
   const sizes = await page.getByRole("region", { name: "Ritmo de gastos" }).locator("[data-axis]").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height));
   expect(sizes.length).toBeGreaterThan(0);
   for (const h of sizes) expect(h).toBeGreaterThanOrEqual(12);
-});
-
-test("tab highlight stays on the active tab after the layout changes", async ({ page, isMobile }) => {
-  test.skip(isMobile, "crosses the desktop breakpoint");
-  await enterDemo(page);
-  const gap = () =>
-    page.evaluate(() => {
-      const nav = document.querySelector('nav[aria-label="Visões de finanças"]')!;
-      const ind = nav.querySelector("li[aria-hidden]")!.getBoundingClientRect();
-      const act = nav.querySelector('a[aria-current="page"]')!.parentElement!.getBoundingClientRect();
-      return Math.abs(ind.left - act.left) + Math.abs(ind.width - act.width);
-    });
-  await page.setViewportSize({ width: 900, height: 900 });
-  await page.waitForTimeout(400);
-  expect(await gap()).toBeLessThanOrEqual(1);
 });
 
 test("the statement month can be chosen, back to closed ones and ahead to forecasts", async ({ page }) => {

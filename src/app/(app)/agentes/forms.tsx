@@ -16,11 +16,11 @@ const KINDS: { v: Kind; label: string }[] = [
 ];
 
 const SCHEDULES = [
-  { v: "", label: "Padrão do tipo de agente" },
-  { v: "continuous", label: "A cada novo lançamento ou importação" },
+  { v: "", label: "O padrão deste tipo de aviso" },
+  { v: "continuous", label: "A cada compra nova ou extrato importado" },
   { v: "daily", label: "Uma vez por dia" },
-  { v: "weekly_monday", label: "Toda segunda-feira, 8h" },
-  { v: "monthly_first", label: "Todo dia 1º, 8h" },
+  { v: "weekly_monday", label: "Toda segunda-feira de manhã" },
+  { v: "monthly_first", label: "Todo dia 1º de manhã" },
 ];
 
 function Submit({ children }: { children: React.ReactNode }) {
@@ -36,7 +36,7 @@ export function NaturalLanguageAgentForm() {
   const [state, action] = useActionState(draftAgentFromTextAction, {});
   return (
     <form action={action} className="flex flex-col gap-3" noValidate>
-      <Field label="Descreva o agente" htmlFor="nl-text" error={state.fieldErrors?.text} hint="Ex.: “me avise quando eu gastar mais de 200 reais por dia com mercado”">
+      <Field label="Do que você quer ser avisado?" htmlFor="nl-text" error={state.fieldErrors?.text} hint="Ex.: “me avise quando eu gastar mais de 200 reais por dia com mercado”">
         <Textarea id="nl-text" name="text" rows={2} maxLength={500} aria-invalid={Boolean(state.fieldErrors?.text)} />
       </Field>
       <FormError message={state.error} />

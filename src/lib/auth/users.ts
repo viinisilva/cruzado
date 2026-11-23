@@ -1,5 +1,5 @@
 // User and session persistence, independent of Next.js (testable).
-import { and, eq, gt, inArray, isNull, lt, or } from "drizzle-orm";
+import { and, count, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { DB } from "@/db/connection";
 import * as s from "@/db/schema";
@@ -56,22 +56,6 @@ export async function createUser(db: DB, input: z.infer<typeof SignupInput>, opt
   await ensureDefaultCategories(db, id);
   await audit(db, id, opts.isDemo ? "auth.demo_created" : "auth.signup");
   return id;
-}
-
-export async function authenticate(db: DB, input: z.infer<typeof LoginInput>): Promise<string | null> {
-  const [user] = await db.select().from(s.users).where(eq(s.users.email, input.email));
-  // Hash even when the user does not exist to keep timing similar.
-  const ok = user ? await verifyPassword(input.password, user.passwordHash) : (await hashPassword(input.password), false);
-  // Same failure for a wrong code as for a wrong password: a stolen password must not be confirmable.
-  if (!user || !ok || !(await checkSecondFactor(db, user, input.code ?? ""))) {
-    await audit(db, user?.id ?? null, "auth.login_failed");
-    return null;
-  }
-  if (needsRehash(user.passwordHash)) {
-    await db.update(s.users).set({ passwordHash: await hashPassword(input.password) }).where(eq(s.users.id, user.id));
-  }
-  await audit(db, user.id, "auth.login");
-  return user.id;
 }
 
 /** Consumes a code: the stored step only moves forward, also under concurrent logins, so it cannot be replayed. */
@@ -168,4 +152,76 @@ export async function deleteUserData(db: DB, userId: string) {
     await tx.delete(s.users).where(eq(s.users.id, userId));
   });
   await audit(db, null, "user.deleted");
+}
+
+export type SignIn = { status: "ok"; userId: string } | { status: "code-required" } | { status: "wrong-code" } | { status: "invalid" };
+
+/**
+ * Login in steps: e-mail and password first, and the two-step code only for an account that has it on. Asking for the
+ * code tells whoever typed the password that it was right, the same trade-off most sites make; the login and
+ * per-account rate limits (actions/auth.ts) still cap how many passwords anyone can try.
+ */
+export async function signIn(db: DB, input: z.infer<typeof LoginInput>): Promise<SignIn> {
+  const [user] = await db.select().from(s.users).where(eq(s.users.email, input.email));
+  // Hash even when the user does not exist to keep timing similar.
+  const ok = user ? await verifyPassword(input.password, user.passwordHash) : (await hashPassword(input.password), false);
+  if (!user || !ok) {
+    await audit(db, user?.id ?? null, "auth.login_failed");
+    return { status: "invalid" };
+  }
+  if (user.totpEnabledAt) {
+    if (!input.code) {
+      await audit(db, user.id, "auth.login_code_requested");
+      return { status: "code-required" };
+    }
+    if (!(await consumeTotp(db, user, input.code))) {
+      await audit(db, user.id, "auth.login_failed", { step: "code" });
+      await warnOnCodeFailures(db, user.id);
+      return { status: "wrong-code" };
+    }
+  }
+  if (needsRehash(user.passwordHash)) {
+    await db.update(s.users).set({ passwordHash: await hashPassword(input.password) }).where(eq(s.users.id, user.id));
+  }
+  await audit(db, user.id, "auth.login");
+  return { status: "ok", userId: user.id };
+}
+
+const CODE_FAILURES = 3;
+const CODE_WINDOW_MS = 15 * 60_000;
+
+/**
+ * Wrong codes after a right password mean someone else has the password. From the third one in 15 minutes, the owner
+ * gets one notification per hour in the app, and the event is audited. (WhatsApp would need a template approved by
+ * Meta to start a conversation; see docs/WHATSAPP.md.)
+ */
+async function warnOnCodeFailures(db: DB, userId: string, now: Date = new Date()) {
+  const [{ n } = { n: 0 }] = await db
+    .select({ n: count() })
+    .from(s.auditEvents)
+    .where(
+      and(
+        eq(s.auditEvents.userId, userId),
+        eq(s.auditEvents.action, "auth.login_failed"),
+        sql`${s.auditEvents.meta}->>'step' = 'code'`,
+        gt(s.auditEvents.createdAt, new Date(now.getTime() - CODE_WINDOW_MS)),
+      ),
+    );
+  if (n < CODE_FAILURES) return;
+  const hour = now.toISOString().slice(0, 13);
+  const created = await db
+    .insert(s.notifications)
+    .values({
+      id: newId(),
+      userId,
+      kind: "system",
+      severity: "risk",
+      title: "Alguém acertou a sua senha e errou o código",
+      body: `Houve ${n} tentativas de entrar na sua conta com a senha certa e o código de verificação errado nos últimos 15 minutos. Se não foi você, troque a senha agora: a verificação em duas etapas segurou a entrada, mas a senha pode ter vazado.`,
+      links: [{ label: "Trocar a senha", href: "/configuracoes?aba=seguranca" }],
+      dedupeKey: `security:code-failures:${hour}`,
+    })
+    .onConflictDoNothing()
+    .returning({ id: s.notifications.id });
+  if (created.length) await audit(db, userId, "auth.code_failures_alert", { failures: n });
 }

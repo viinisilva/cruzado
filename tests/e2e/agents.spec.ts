@@ -14,9 +14,9 @@ test("agent edit: rename and save changes", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/agentes");
 
-  // Find the first confirmed (active) agent in "Seus agentes"
-  const agentSection = page.getByRole("region", { name: /Seus agentes|mine/i }).or(
-    page.locator("section").filter({ hasText: "Seus agentes" }),
+  // Find the first confirmed (active) agent in "Seus avisos"
+  const agentSection = page.getByRole("region", { name: /Seus avisos|mine/i }).or(
+    page.locator("section").filter({ hasText: "Seus avisos" }),
   );
   const firstCard = agentSection.locator("li").first();
   const originalHeading = await firstCard.locator("h3").textContent();
@@ -57,7 +57,7 @@ test("agent edit: empty name shows validation error", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/agentes");
 
-  const agentSection = page.locator("section").filter({ hasText: "Seus agentes" });
+  const agentSection = page.locator("section").filter({ hasText: "Seus avisos" });
   const firstCard = agentSection.locator("li").first();
   await firstCard.getByText("Editar", { exact: true }).click();
 
@@ -76,7 +76,7 @@ test("agent pause and resume", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/agentes");
 
-  const agentSection = page.locator("section").filter({ hasText: "Seus agentes" });
+  const agentSection = page.locator("section").filter({ hasText: "Seus avisos" });
   // By position: filtering on "Ativo" would stop matching as soon as the card changes status.
   const activeCard = agentSection.getByRole("region").first();
 
@@ -87,7 +87,7 @@ test("agent pause and resume", async ({ page }) => {
 
   // Resume
   await activeCard.getByRole("button", { name: "Retomar" }).click();
-  await expect(activeCard.getByText("Ativo", { exact: true })).toBeVisible();
+  await expect(activeCard.getByText("Ligado", { exact: true })).toBeVisible();
 });
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ test("agent delete removes card from the list", async ({ page }) => {
   await page.goto("/agentes");
 
   // Create a new agent first so we don't destroy demo agents
-  await page.getByLabel("Descreva o agente").fill("me avise quando eu gastar mais de R$ 50 por dia");
+  await page.getByLabel("Do que você quer ser avisado?").fill("me avise quando eu gastar mais de R$ 50 por dia");
   await page.getByRole("button", { name: "Gerar rascunho" }).click();
   await expect(page.getByText("Rascunho criado a partir do seu pedido")).toBeVisible();
 
@@ -137,7 +137,7 @@ test("manual agent creation creates a draft with the correct kind", async ({ pag
 
   // Should appear in drafts
   await expect(page.getByRole("heading", { name: uniqueName, level: 3 })).toBeVisible();
-  await expect(page.getByText("Rascunho — aguardando confirmação")).toBeVisible();
+  await expect(page.getByText("Esperando a sua confirmação")).toBeVisible();
 });
 
 // ---------------------------------------------------------------------------
@@ -148,12 +148,12 @@ test("active agent can be executed immediately", async ({ page }) => {
   await enterDemo(page);
   await page.goto("/agentes");
 
-  const agentSection = page.locator("section").filter({ hasText: "Seus agentes" });
+  const agentSection = page.locator("section").filter({ hasText: "Seus avisos" });
   // By position: filtering on "Ativo" would stop matching as soon as the card changes status.
   const activeCard = agentSection.getByRole("region").first();
 
-  await activeCard.getByRole("button", { name: "Executar agora" }).click();
+  await activeCard.getByRole("button", { name: "Conferir agora" }).click();
 
   // Button re-enables after execution (no error toast visible)
-  await expect(activeCard.getByRole("button", { name: "Executar agora" })).toBeVisible();
+  await expect(activeCard.getByRole("button", { name: "Conferir agora" })).toBeVisible();
 });

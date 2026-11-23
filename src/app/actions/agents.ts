@@ -57,7 +57,7 @@ export async function updateAgentAction(_: FormState, form: FormData): Promise<F
   try {
     await updateAgent(await getDb(), user.id, String(form.get("id")), rule);
   } catch (e) {
-    return { error: publicError(e, "Não foi possível salvar o agente.") };
+    return { error: publicError(e, "Não foi possível salvar o aviso.") };
   }
   revalidatePath("/agentes");
   return { ok: true, message: "Agente atualizado." };
@@ -67,7 +67,7 @@ export async function updateAgentAction(_: FormState, form: FormData): Promise<F
 export async function draftAgentFromTextAction(_: FormState, form: FormData): Promise<FormState> {
   const user = await requireWriter();
   const text = String(form.get("text") ?? "").trim().slice(0, 1000);
-  if (text.length < 5) return { fieldErrors: { text: "Descreva o que o agente deve vigiar." } };
+  if (text.length < 5) return { fieldErrors: { text: "Descreva do que você quer ser avisado." } };
   const db = await getDb();
   if (!(await rateLimitShared(db, "chat", user.id)).ok) return { error: "Muitas solicitações. Tente em instantes." };
   if (await consentMissing(db, user.id)) return { error: "Para usar um provedor de IA externo, autorize o envio de dados em Configurações." };

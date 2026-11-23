@@ -212,7 +212,10 @@ export function Notice({ tone = "info", title, children }: { tone?: keyof typeof
 
 export function EmptyState({ title, children, action, icon }: { title: string; children?: ReactNode; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-border-strong/60 bg-surface-2 p-6 sm:flex-row sm:items-center">
+    <div className="relative isolate flex flex-col items-start gap-3 overflow-hidden rounded-2xl border border-dashed border-border-strong/60 bg-surface-2 p-6 sm:flex-row sm:items-center">
+      {/* A corner of the landing page's guilloché, faint: the same identity in empty places. Decorative. */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG */}
+      <img src="/landing/guilloche.svg" alt="" aria-hidden width={920} height={920} loading="lazy" decoding="async" className="pointer-events-none absolute -bottom-40 -right-36 -z-10 w-80 max-w-none opacity-35" />
       {icon ? <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-primary shadow-card">{icon}</span> : null}
       <div className="min-w-0 flex-1">
         <p className="text-base font-semibold">{title}</p>

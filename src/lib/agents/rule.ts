@@ -52,10 +52,10 @@ export const KIND_LABEL: Record<AgentKind, string> = {
 };
 
 export const SCHEDULE_LABEL: Record<Schedule, string> = {
-  continuous: "verifica a cada lançamento ou importação e na verificação periódica",
+  continuous: "confere a cada compra nova ou extrato importado, e uma vez por dia",
   daily: "uma vez por dia",
-  weekly_monday: "toda segunda-feira, a partir das 8h",
-  monthly_first: "todo dia 1º, a partir das 8h",
+  weekly_monday: "toda segunda-feira de manhã",
+  monthly_first: "todo dia 1º de manhã",
 };
 
 export function normalizeRule(rule: AgentRule): AgentRule & { schedule: Schedule } {
@@ -78,16 +78,16 @@ export function describeRule(
       lines.push(`Avisa quando as despesas de um mesmo dia passarem de ${formatBRL(r.thresholdCents ?? 0)} ${scope}.`);
       break;
     case "weekly_summary":
-      lines.push(`Gera um resumo da semana anterior (segunda a domingo) com as principais categorias e variações ${scope}.`);
+      lines.push(`Manda um resumo da semana anterior (de segunda a domingo), com o que mais pesou e o que mais mudou, ${scope}.`);
       break;
     case "possible_duplicate":
-      lines.push(`Procura cobranças com mesmo estabelecimento, valor semelhante e até 3 dias de diferença ${scope}. Marca como suspeita, nunca como fraude.`);
+      lines.push(`Procura cobranças com mesmo estabelecimento, valor semelhante e até 3 dias de diferença ${scope}. É só uma suspeita, para você conferir.`);
       break;
     case "monthly_comparison":
-      lines.push(`Compara o mês corrente com o mesmo intervalo de dias do mês anterior e destaca as maiores variações ${scope}.`);
+      lines.push(`Compara os gastos deste mês com os mesmos dias do mês passado e mostra o que mais mudou, ${scope}.`);
       break;
   }
-  lines.push(`Frequência: ${SCHEDULE_LABEL[r.schedule]} (fuso America/Sao_Paulo).`);
-  if (opts.draft) lines.push(r.enabled ? "Será ativado após sua confirmação." : "Ficará pausado após a confirmação.");
+  lines.push(`Quando: ${SCHEDULE_LABEL[r.schedule]}, no horário de Brasília.`);
+  if (opts.draft) lines.push(r.enabled ? "Começa a valer depois que você confirmar." : "Fica pausado depois que você confirmar.");
   return lines;
 }

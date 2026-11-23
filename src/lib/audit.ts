@@ -6,6 +6,8 @@ export type AuditAction =
   | "auth.signup"
   | "auth.login"
   | "auth.login_failed"
+  | "auth.login_code_requested"
+  | "auth.code_failures_alert"
   | "auth.logout"
   | "auth.demo_created"
   | "import.completed"

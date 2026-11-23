@@ -6,11 +6,11 @@ import { getDb } from "@/db/client";
 import { demoOpen, signupOpen } from "@/lib/auth/access";
 import { sha256Hex } from "@/lib/auth/crypto";
 import { blockInDemoInstance, endSession, startSession } from "@/lib/auth/session";
-import { EmailTakenError, LoginInput, SignupInput, authenticate, createDemoUser, createUser } from "@/lib/auth/users";
+import { EmailTakenError, LoginInput, SignupInput, createDemoUser, createUser, signIn } from "@/lib/auth/users";
 import { errorSummary } from "@/lib/log";
 import { clientIp, rateLimitShared } from "@/lib/rate-limit";
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string>; ok?: boolean; message?: string; values?: Record<string, string> };
+export type FormState = { error?: string; fieldErrors?: Record<string, string>; ok?: boolean; message?: string; values?: Record<string, string>; needsCode?: boolean };
 
 export async function fieldErrors(err: z.ZodError): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
@@ -31,9 +31,12 @@ export async function loginAction(_: FormState, form: FormData): Promise<FormSta
   if (!parsed.success) return { fieldErrors: await fieldErrors(parsed.error), values };
   // Per-account ceiling so rotating IPs does not give unlimited guesses. Hashed: this table keeps no e-mails.
   if (!(await rateLimitShared(db, "authEmail", sha256Hex(parsed.data.email))).ok) return { error: "Muitas tentativas. Aguarde alguns minutos.", values };
-  const userId = await authenticate(db, parsed.data);
-  if (!userId) return { error: "E-mail, senha ou código incorretos.", values };
-  await startSession(userId);
+  const result = await signIn(db, parsed.data);
+  if (result.status === "invalid") return { error: "E-mail ou senha incorretos.", values };
+  // Second step: the same form comes back asking only for the code; e-mail and password ride along in hidden fields.
+  if (result.status === "code-required") return { needsCode: true, values };
+  if (result.status === "wrong-code") return { needsCode: true, error: "Código incorreto. Confira no seu app autenticador e tente de novo.", values };
+  await startSession(result.userId);
   redirect("/inicio");
 }
 

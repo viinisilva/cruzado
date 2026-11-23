@@ -3,49 +3,64 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { ArrowLeftRight, Bot, Eye, EyeOff, Home, MessageCircle, Minus, Moon, Settings, Sun, SunMoon, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { Eye, EyeOff, Home, LayoutGrid, Minus, Moon, Sun, SunMoon, TrendingDown, TrendingUp } from "lucide-react";
+import { MORE, NAV } from "./nav-items";
 import { formatBasisPoints, maskMoney } from "@/lib/money";
 import { Button, cx } from "./ui";
 
-export const NAV = [
-  { href: "/inicio", label: "Início", icon: Home },
-  { href: "/transacoes", label: "Transações", icon: ArrowLeftRight },
-  { href: "/chat", label: "Chat", icon: MessageCircle },
-  { href: "/agentes", label: "Agentes", icon: Bot },
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+const within = (path: string, href: string) => path === href || path.startsWith(`${href}/`);
+const inMore = (path: string) => path === "/mais" || MORE.some((m) => within(path, m.href));
 
-/** The sidebar has room for it; on phones these pages open from Início, which stays lit while you are there. */
-const SIDE_NAV = [NAV[0], NAV[1], { href: "/contas", label: "Contas e cartões", icon: Wallet }, NAV[2], NAV[3], NAV[4]] as const;
-const isCards = (path: string) => path === "/contas" || path === "/cartoes";
-/** Finance views without a place of their own in the navigation: Início stays lit while you are in them. */
-const isOverview = (path: string) => path === "/categorias" || path === "/recorrentes";
+function NavLink({ href, label, icon: Icon, active, variant }: { href: string; label: string; icon: typeof Home; active: boolean; variant: "side" | "bottom" }) {
+  if (variant === "bottom") {
+    return (
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={cx("flex min-h-[4.25rem] flex-col items-center justify-center gap-1 text-sm", active ? "font-semibold text-primary" : "font-medium text-muted")}
+      >
+        <span className={cx("flex h-8 w-14 items-center justify-center rounded-full transition-colors", active && "bg-primary-soft")}>
+          <Icon aria-hidden size={24} strokeWidth={active ? 2.3 : 1.9} />
+        </span>
+        <span>{label}</span>
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cx(
+        "relative flex min-h-12 items-center gap-3 rounded-xl px-3 text-base transition-colors",
+        active ? "bg-primary-soft font-semibold text-primary before:absolute before:inset-y-2.5 before:-left-4 before:w-1 before:rounded-r-full before:bg-primary" : "font-medium text-muted hover:bg-surface-3 hover:text-text",
+      )}
+    >
+      <Icon aria-hidden size={21} strokeWidth={active ? 2.25 : 1.9} />
+      {label}
+    </Link>
+  );
+}
 
 export function SideNav() {
   const path = usePathname();
   return (
-    <ul className="flex flex-col gap-1">
-      {SIDE_NAV.map(({ href, label, icon: Icon }) => {
-        const active = href === "/contas" ? isCards(path) : path === href || path.startsWith(`${href}/`) || (href === "/inicio" && isOverview(path));
-        // Money pages, then the helpers, then settings: a gap separates each group without adding labels.
-        const gap = href === "/chat" || href === "/configuracoes";
-        return (
-          <li key={href} className={gap ? "mt-3 border-t border-border pt-3" : undefined}>
-            <Link
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cx(
-                "relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-[0.9375rem] transition-colors",
-                active ? "bg-primary-soft font-semibold text-primary before:absolute before:inset-y-2.5 before:-left-4 before:w-1 before:rounded-r-full before:bg-primary" : "font-medium text-muted hover:bg-surface-3 hover:text-text",
-              )}
-            >
-              <Icon aria-hidden size={20} strokeWidth={active ? 2.25 : 1.9} />
-              {label}
-            </Link>
+    <>
+      <ul className="flex flex-col gap-1">
+        {NAV.map((n) => (
+          <li key={n.href}>
+            <NavLink {...n} active={within(path, n.href)} variant="side" />
           </li>
-        );
-      })}
-    </ul>
+        ))}
+      </ul>
+      <p className="mt-5 px-3 pb-1 text-sm font-semibold text-muted">Mais</p>
+      <ul className="flex flex-col gap-1">
+        {MORE.map((n) => (
+          <li key={n.href}>
+            <NavLink {...n} active={within(path, n.href)} variant="side" />
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -53,23 +68,14 @@ export function BottomNav() {
   const path = usePathname();
   return (
     <ul className="mx-auto grid max-w-lg grid-cols-5">
-      {NAV.map(({ href, label, icon: Icon }) => {
-        const active = path === href || path.startsWith(`${href}/`) || (href === "/inicio" && (isCards(path) || isOverview(path)));
-        return (
-          <li key={href}>
-            <Link
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cx("flex min-h-16 flex-col items-center justify-center gap-1 text-meta", active ? "font-semibold text-primary" : "font-medium text-muted")}
-            >
-              <span className={cx("flex h-8 w-14 items-center justify-center rounded-full transition-colors", active && "bg-primary-soft")}>
-                <Icon aria-hidden size={22} strokeWidth={active ? 2.3 : 1.8} />
-              </span>
-              <span className="max-w-full truncate px-0.5">{label === "Configurações" ? "Ajustes" : label}</span>
-            </Link>
-          </li>
-        );
-      })}
+      {NAV.map((n) => (
+        <li key={n.href}>
+          <NavLink {...n} active={within(path, n.href)} variant="bottom" />
+        </li>
+      ))}
+      <li>
+        <NavLink href="/mais" label="Mais" icon={LayoutGrid} active={inMore(path)} variant="bottom" />
+      </li>
     </ul>
   );
 }

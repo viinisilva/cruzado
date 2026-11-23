@@ -446,8 +446,8 @@ const listActiveAgents = defineTool({
     const statusLabel = { active: "ativo", paused: "pausado", draft: "rascunho" } as const;
     return {
       data: { agents: rows.map((r) => ({ id: r.id, name: r.name, kind: r.kind, status: r.status })) },
-      evidence: { tool: "listActiveAgents", filters: { accounts: [], categories: [] }, sources: [{ label: "Gerenciar agentes", href: "/agentes" }] },
-      text: rows.length ? `Seus agentes:\n${rows.map((r) => `- ${r.name} (${KIND_LABEL[r.kind]}): ${statusLabel[r.status]}`).join("\n")}` : "Você ainda não tem agentes configurados.",
+      evidence: { tool: "listActiveAgents", filters: { accounts: [], categories: [] }, sources: [{ label: "Abrir Meus avisos", href: "/agentes" }] },
+      text: rows.length ? `Seus avisos:\n${rows.map((r) => `- ${r.name} (${KIND_LABEL[r.kind]}): ${statusLabel[r.status]}`).join("\n")}` : "Você ainda não tem avisos configurados.",
     };
   },
 });
@@ -485,7 +485,7 @@ const createAgentDraftTool = defineTool({
       enabled: true,
     });
     if (!parsed.success) {
-      const msg = `Preciso de mais detalhes para criar o agente: ${parsed.error.issues.map((i) => i.message).join("; ")}`;
+      const msg = `Preciso de mais detalhes para criar o aviso: ${parsed.error.issues.map((i) => i.message).join("; ")}`;
       return { data: { needsClarification: msg }, evidence: { tool: "createAgentDraft", filters: { accounts: [], categories: [] }, sources: [] }, text: msg, clarification: msg };
     }
     const id = await createAgentDraft(ctx.db, ctx.userId, parsed.data, { origin: "natural_language", sourceText: input.sourceText });
@@ -498,10 +498,10 @@ const createAgentDraftTool = defineTool({
       evidence: {
         tool: "createAgentDraft",
         filters: { accounts: acc.names, categories: cat.names },
-        sources: [{ label: "Revisar e confirmar o agente", href: `/agentes?rascunho=${id}` }],
-        notes: ["O agente ainda NÃO está ativo. Ele só passa a rodar depois que você confirmar."],
+        sources: [{ label: "Revisar e confirmar o aviso", href: `/agentes?rascunho=${id}` }],
+        notes: ["O aviso ainda NÃO está ligado. Ele só começa depois que você confirmar."],
       },
-      text: `Preparei um rascunho de agente "${parsed.data.name}":\n${summary.map((x) => `- ${x}`).join("\n")}\nRevise e confirme para ativá-lo.`,
+      text: `Preparei um rascunho de aviso "${parsed.data.name}":\n${summary.map((x) => `- ${x}`).join("\n")}\nRevise e confirme para ligá-lo.`,
       draftAgentId: id,
     };
   },

@@ -9,7 +9,6 @@ import { initials } from "@/lib/banks";
 import { BottomNav, HideValuesButton, PrivacyProvider, SideNav } from "@/components/client";
 import { logoutAction } from "../actions/auth";
 import { Logo } from "@/components/logo";
-import { FinanceTabs } from "@/components/finance-tabs";
 import { Suspense } from "react";
 import { DemoBanner } from "@/components/demo-banner";
 import { isDemoInstance } from "@/lib/demo/instance-env";
@@ -19,7 +18,7 @@ function AlertsLink({ unread }: { unread: number }) {
     <Link
       href="/alertas"
       className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface-3 hover:text-text"
-      aria-label={unread ? `Alertas: ${unread} não lidos` : "Alertas"}
+      aria-label={unread ? `Notificações: ${unread} não lidas` : "Notificações"}
     >
       <Bell aria-hidden size={20} />
       {unread ? (
@@ -88,28 +87,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 <Logo />
               </Link>
               <div className="flex items-center gap-1">
-                {user.isDemo ? (
-                  <span className="rounded-full bg-attention-soft px-2.5 py-0.5 text-meta font-semibold text-attention lg:hidden">
-                    <span aria-hidden className="min-[400px]:hidden">Demo</span>
-                    <span className="max-[399px]:sr-only">Demonstração</span>
-                  </span>
-                ) : null}
                 <HideValuesButton />
                 <Suspense fallback={<AlertsLink unread={0} />}>
                   <UnreadAlertsLink userId={user.id} />
                 </Suspense>
-                {publicDemo ? null : (
-                  <form action={logoutAction} className="lg:hidden">
-                    <button className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-muted hover:bg-surface-3" aria-label="Sair">
-                      <LogOut aria-hidden size={20} />
-                    </button>
-                  </form>
-                )}
               </div>
             </div>
           </header>
           <main id="conteudo" className="mx-auto w-full max-w-[1480px] flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-10 lg:pb-14 lg:pt-2">
-            <FinanceTabs />
             {children}
           </main>
         </div>

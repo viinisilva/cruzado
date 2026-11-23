@@ -10,11 +10,11 @@ import { Badge, Button, ButtonLink, EmptyState, PageHeader, cx } from "@/compone
 import { SensitiveText } from "@/components/client";
 import { markNotificationsReadAction } from "../../actions/agents";
 
-export const metadata: Metadata = { title: "Alertas" };
+export const metadata: Metadata = { title: "Notificações" };
 
 const NEXT_STEP: Record<string, string> = {
   possible_duplicate: "Confira as transações abaixo. É uma suspeita, não confirmação de fraude; só o seu banco pode dizer se a cobrança é indevida.",
-  daily_spend_limit: "Veja o que entrou no dia. O limite pode ser ajustado no agente.",
+  daily_spend_limit: "Veja o que entrou no dia. O limite pode ser ajustado em Meus avisos.",
   weekly_summary: "Abra as transações para ver o detalhe da semana.",
   monthly_comparison: "Compare as categorias que mais mudaram.",
 };
@@ -27,8 +27,8 @@ export default async function AlertsPage() {
   return (
     <>
       <PageHeader
-        title="Alertas"
-        description={`${plural(unread, "não lido", "não lidos")}. Criados pelos seus agentes quando verificam seus dados.`}
+        title="Notificações"
+        description={`${plural(unread, "não lida", "não lidas")}. Chegam quando um dos seus avisos encontra algo; as regras ficam em Meus avisos.`}
         action={
           unread ? (
             <form action={markNotificationsReadAction}>

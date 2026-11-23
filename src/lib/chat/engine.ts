@@ -108,7 +108,7 @@ export async function answer(
     for (let step = 0; step < MAX_STEPS; step++) {
       const res = await provider.complete({ system, turns, tools });
       if (res.refused) {
-        finalText = "Não consigo ajudar com esse pedido. Posso responder perguntas sobre seus gastos, saldos, assinaturas e agentes.";
+        finalText = "Não consigo ajudar com esse pedido. Posso responder perguntas sobre seus gastos, saldos, assinaturas e avisos.";
         break;
       }
       if (!res.toolCalls.length) {
