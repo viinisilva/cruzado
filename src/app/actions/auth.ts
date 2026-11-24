@@ -9,6 +9,7 @@ import { blockInDemoInstance, endSession, startSession } from "@/lib/auth/sessio
 import { EmailTakenError, LoginInput, SignupInput, createDemoUser, createUser, signIn } from "@/lib/auth/users";
 import { errorSummary } from "@/lib/log";
 import { clientIp, rateLimitShared } from "@/lib/rate-limit";
+import { loginContext } from "@/lib/auth/login-context";
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string>; ok?: boolean; message?: string; values?: Record<string, string>; needsCode?: boolean };
 
@@ -31,7 +32,7 @@ export async function loginAction(_: FormState, form: FormData): Promise<FormSta
   if (!parsed.success) return { fieldErrors: await fieldErrors(parsed.error), values };
   // Per-account ceiling so rotating IPs does not give unlimited guesses. Hashed: this table keeps no e-mails.
   if (!(await rateLimitShared(db, "authEmail", sha256Hex(parsed.data.email))).ok) return { error: "Muitas tentativas. Aguarde alguns minutos.", values };
-  const result = await signIn(db, parsed.data);
+  const result = await signIn(db, parsed.data, loginContext(await headers()));
   if (result.status === "invalid") return { error: "E-mail ou senha incorretos.", values };
   // Second step: the same form comes back asking only for the code; e-mail and password ride along in hidden fields.
   if (result.status === "code-required") return { needsCode: true, values };

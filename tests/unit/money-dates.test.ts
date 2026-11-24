@@ -84,6 +84,9 @@ describe("text", () => {
     expect(normalizeMerchant("Compra Cartão VISA Farmácia Bem-Estar 123")).toBe("farmacia bem estar");
     expect(parseInstallment("Geladeira 3/10")).toEqual({ number: 3, total: 10 });
     expect(parseInstallment("Pedido 12/05")).toBeNull();
+    // Some banks glue the number to the name (Bradesco Elo, as reported by the owner on 23/11/2026).
+    expect(parseInstallment("MERCADOLIVRE MERCADO02/04")).toEqual({ number: 2, total: 4 });
+    expect(parseInstallment("LOJA ABC03/10")).toEqual({ number: 3, total: 10 });
   });
 });
 

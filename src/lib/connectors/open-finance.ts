@@ -349,6 +349,9 @@ async function upsertPage(tx: Tx, conn: Connection, accountId: string, txs: Mapp
           lastSeenRun: sql`excluded.last_seen_run`,
           billRef: sql`excluded.bill_ref`,
           operationType: sql`excluded.operation_type`,
+          // Bank facts too: a better reader (text.ts, parseInstallment) fills them in for rows stored before it.
+          installmentNumber: sql`excluded.installment_number`,
+          installmentTotal: sql`excluded.installment_total`,
           ...(bill.id && bill.fixable.length
             ? { categoryId: sql`CASE WHEN excluded.category_id = ${bill.id} AND (${t.categoryId} IS NULL OR ${t.categoryId} IN (${sql.join(bill.fixable.map((id) => sql`${id}`), sql`, `)})) THEN excluded.category_id ELSE ${t.categoryId} END` }
             : {}),

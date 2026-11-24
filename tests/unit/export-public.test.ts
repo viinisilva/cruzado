@@ -13,6 +13,7 @@ describe("amountPatterns", () => {
   it.each(["total 1.021,57", "1021,57", "valor: 1021.57", "amountCents: -102157,"])("finds %s", (t) => expect(kinds(t, p)).toEqual(["valor das faturas reais (corpus)"]));
   it.each(["11.021,57", "1021,571", "2102157", "1021,58"])("does not confuse %s", (t) => expect(kinds(t, p)).toEqual([]));
   it("ignores round amounts, which identify no one", () => expect(amountPatterns(10000)).toEqual([]));
+  it.each([999, 424, 590])("ignores small amounts like %s cents, common prices that also look like version numbers", (c) => expect(amountPatterns(c)).toEqual([]));
 });
 
 // Fake secrets are assembled at run time, so this file does not trip the very check it tests.
@@ -34,7 +35,7 @@ describe("scanText", () => {
 });
 
 describe("isExcluded", () => {
-  it.each(["tests/corpus/banks/x/y.json", "docs/HANDOFF.md", "docs/DIAGNOSTICO_2026-11-17.md", "docs/redesign/v3/a.png", ".claude/launch.json", "tests/unit/classify.test.ts", "skills-lock.json", "docs/SECURITY_REVIEW.md", "docs/USO_COMPARTILHADO.md"])("leaves out %s", (f) => expect(isExcluded(f)).toBe(true));
+  it.each(["tests/corpus/banks/x/y.json", "docs/HANDOFF.md", "docs/DIAGNOSTICO_2026-11-17.md", "docs/redesign/v3/a.png", ".claude/launch.json", "tests/unit/classify.test.ts", "skills-lock.json", "docs/SECURITY_REVIEW.md", "docs/USO_COMPARTILHADO.md", "docs/BANCOS_2026-11.md", "tests/unit/reconciliation-report-elo.test.ts"])("leaves out %s", (f) => expect(isExcluded(f)).toBe(true));
   it.each(["src/app/page.tsx", "docs/ARCHITECTURE.md", "tests/unit/finance.test.ts", ".env.example"])("keeps %s", (f) => expect(isExcluded(f)).toBe(false));
 });
 

@@ -96,3 +96,17 @@ describe("signIn, second step", () => {
     expect(await db.select().from(s.notifications).where(eq(s.notifications.userId, id))).toHaveLength(0);
   }, 60_000);
 });
+
+describe("where a sign-in came from", () => {
+  it("the login audit keeps the device kind and the truncated network, never the full IP or user agent", async () => {
+    const { id, email } = await newUser();
+    const ctx = { device: "celular · Chrome · Android", network: "189.45.0.0/16" };
+    await signIn(db, { email, password: "outra-senha-qualquer" }, ctx);
+    await signIn(db, { email, password }, ctx);
+    const rows = await db.select().from(s.auditEvents).where(eq(s.auditEvents.userId, id));
+    const metas = rows.filter((r) => r.action === "auth.login" || r.action === "auth.login_failed").map((r) => r.meta);
+    expect(metas).toHaveLength(2);
+    for (const meta of metas) expect(meta).toEqual(expect.objectContaining(ctx));
+    expect(JSON.stringify(rows)).not.toMatch(/189\.45\.\d+\.\d+(?!\/)|Mozilla/);
+  });
+});

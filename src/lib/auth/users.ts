@@ -8,6 +8,7 @@ import { audit } from "../audit";
 import { decryptSecret, hashPassword, needsRehash, randomToken, sha256Hex, verifyPassword } from "./crypto";
 import { verifyTotp } from "./totp";
 import { ensureDefaultCategories, seedDemoData } from "../demo/seed";
+import type { LoginContext } from "./login-context";
 import { todayInSaoPaulo } from "../dates";
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -161,21 +162,23 @@ export type SignIn = { status: "ok"; userId: string } | { status: "code-required
  * code tells whoever typed the password that it was right, the same trade-off most sites make; the login and
  * per-account rate limits (actions/auth.ts) still cap how many passwords anyone can try.
  */
-export async function signIn(db: DB, input: z.infer<typeof LoginInput>): Promise<SignIn> {
+export async function signIn(db: DB, input: z.infer<typeof LoginInput>, from: LoginContext | null = null): Promise<SignIn> {
+  // Device kind and truncated network (auth/login-context.ts), never the full IP or the raw user agent.
+  const where: Record<string, string | null> = from ? { device: from.device, network: from.network } : {};
   const [user] = await db.select().from(s.users).where(eq(s.users.email, input.email));
   // Hash even when the user does not exist to keep timing similar.
   const ok = user ? await verifyPassword(input.password, user.passwordHash) : (await hashPassword(input.password), false);
   if (!user || !ok) {
-    await audit(db, user?.id ?? null, "auth.login_failed");
+    await audit(db, user?.id ?? null, "auth.login_failed", where);
     return { status: "invalid" };
   }
   if (user.totpEnabledAt) {
     if (!input.code) {
-      await audit(db, user.id, "auth.login_code_requested");
+      await audit(db, user.id, "auth.login_code_requested", where);
       return { status: "code-required" };
     }
     if (!(await consumeTotp(db, user, input.code))) {
-      await audit(db, user.id, "auth.login_failed", { step: "code" });
+      await audit(db, user.id, "auth.login_failed", { step: "code", ...where });
       await warnOnCodeFailures(db, user.id);
       return { status: "wrong-code" };
     }
@@ -183,7 +186,7 @@ export async function signIn(db: DB, input: z.infer<typeof LoginInput>): Promise
   if (needsRehash(user.passwordHash)) {
     await db.update(s.users).set({ passwordHash: await hashPassword(input.password) }).where(eq(s.users.id, user.id));
   }
-  await audit(db, user.id, "auth.login");
+  await audit(db, user.id, "auth.login", where);
   return { status: "ok", userId: user.id };
 }
 

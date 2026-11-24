@@ -266,6 +266,16 @@ describe("what the bank changes and what the user owns", () => {
     expect(rows[0]).toMatchObject({ id: row!.id, amountCents: -8550, bankStatus: "posted", categoryId: cat!.id, description: "Jantar com amigos", providerDescription: "RESTAURANTE XYZ", notes: "aniversário" });
   });
 
+  it("a row stored without installment numbers gets them on the next sync", async () => {
+    state.txs[CARD] = [tx("c1", 20, 95.5, { type: "DEBIT", status: "PENDING", description: "LOJA EXEMPLO02/04" })];
+    await connectItem(db, client, userId, ITEM, NOW);
+    // As an older reader left it in production: no installment read from the glued "02/04".
+    await db.update(s.transactions).set({ installmentNumber: null, installmentTotal: null }).where(eq(s.transactions.userId, userId));
+    await syncConnection(db, client, await conn(), LATER);
+    const [row] = await db.select().from(s.transactions).where(eq(s.transactions.userId, userId));
+    expect(row).toMatchObject({ installmentNumber: 2, installmentTotal: 4 });
+  });
+
   it("without an override the bank's new text is used", async () => {
     state.txs[CARD] = [tx("c1", 20, 80, { type: "DEBIT" })];
     await connectItem(db, client, userId, ITEM, NOW);

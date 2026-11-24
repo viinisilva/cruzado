@@ -4,7 +4,7 @@ import { readsLikeBillPayment } from "../categorizer";
 import { addDays } from "../dates";
 import { sumCents } from "../money";
 import { applyFilters, isTransfer, type CardInfo, type FinCategory, type FinTx } from "./core";
-import { carriedOver, notChargedByBank, statementEntries, statementForMonth, type CardStatement } from "./cards";
+import { cardView, carriedOver, notChargedByBank, statementEntries, statementForMonth, type CardStatement } from "./cards";
 import { DIVERGENCE_CENTS, divergenceReason } from "./calibration";
 import { ruleOf, type ClosingRule, type Confidence, type DivergenceReason } from "./cycles";
 import { SIGNAL_TEXT, type CreditKind } from "./classify";
@@ -12,7 +12,7 @@ import { solveBill, type SolverResult } from "./solver";
 
 /** bill: the bank tied it to this bill. date: no bill from the bank, placed by the cycle's dates. */
 /** bill: the bank tied it to this bill. date: placed by the cycle's dates. carried: pending, left out of the previous bill in its last days. */
-export type IncludedReason = "bill" | "date" | "carried";
+export type IncludedReason = "bill" | "date" | "carried" | "purchase-date" | "projected";
 /**
  * transfer: a bill payment or a move between own accounts. other-bill: the bank tied it to another bill.
  * not-charged: pending, and the bank closed this bill without it (see notChargedByBank). Kept, never deleted.
@@ -39,6 +39,9 @@ export type CheckRow = {
   decision: { kind: CreditKind; why: string; matched: { id: string; description: string; date: string } | null } | null;
   /** Who set the category: the person's choice is never changed by any automatic step. */
   chosenByUser: boolean;
+  /** A "parcela prevista" (cards.ts, projectInstallments): the bank never sent it; it has no page, only "Excluir". */
+  projected: boolean;
+  projectionKey: string | null;
 };
 
 export type StatementCheck = {
@@ -67,7 +70,8 @@ export type StatementCheck = {
 const EDGE_DAYS = 5;
 const byDate = <T extends { date: string; amountCents: number }>(a: T, b: T) => a.date.localeCompare(b.date) || a.amountCents - b.amountCents;
 
-export function checkStatement(card: CardInfo, txs: FinTx[], categories: FinCategory[], today: string, month: string): StatementCheck | null {
+export function checkStatement(card: CardInfo, given: FinTx[], categories: FinCategory[], today: string, month: string): StatementCheck | null {
+  const txs = cardView(card, given, today);
   const statement = statementForMonth(card, txs, categories, today, month);
   if (!statement || statement.status === "future") return null;
   const { cycle } = statement;
@@ -93,7 +97,8 @@ export function checkStatement(card: CardInfo, txs: FinTx[], categories: FinCate
     if (t.date > today) flags.push("scheduled");
     return {
       id: t.id,
-      date: t.date,
+      // An installment moved to its charge date (cards.ts, chargeDated) shows the date the bank sent: the purchase.
+      date: t.purchaseDate ?? t.date,
       description: t.description,
       amountCents: t.amountCents,
       categoryName: (t.categoryId && cats.get(t.categoryId)?.name) || "Sem categoria",
@@ -101,10 +106,12 @@ export function checkStatement(card: CardInfo, txs: FinTx[], categories: FinCate
       flags,
       decision: t.amountCents > 0 && t.classification ? { kind: t.classification.kind, why: SIGNAL_TEXT[t.classification.reason], matched: matchedOf(t.classification.matchedTxId) } : null,
       chosenByUser: t.categorySource === "user",
+      projected: t.projected === true,
+      projectionKey: t.projectionKey ?? null,
     };
   };
 
-  const included = counted.map((t) => ({ ...row(t), reason: (carried.has(t.id) ? "carried" : t.billRef && known.has(t.billRef) ? "bill" : "date") as IncludedReason })).sort(byDate);
+  const included = counted.map((t) => ({ ...row(t), reason: (t.projected ? "projected" : carried.has(t.id) ? "carried" : t.purchaseDate ? "purchase-date" : t.billRef && known.has(t.billRef) ? "bill" : "date") as IncludedReason })).sort(byDate);
   const excluded = mine
     .filter((t) => inDates(t) && !countedIds.has(t.id))
     .map((t) => ({ ...row(t), reason: (isTransfer(t, cats) ? "transfer" : uncharged.has(t.id) ? "not-charged" : t.bankStatus === "pending" && !t.billRef && statement.billRef ? "late" : "other-bill") as ExcludedReason }))
@@ -132,6 +139,6 @@ export function checkStatement(card: CardInfo, txs: FinTx[], categories: FinCate
     ruleConfidence: card.calibration?.ruleConfidence ?? "none",
     ruleBills: card.calibration?.evidence.bills ?? 0,
     solver: solveBill(card, statement, txs, categories, today),
-    divergence: statement.bankTotalCents !== null && Math.abs(statement.bankTotalCents - statement.computedCents) > DIVERGENCE_CENTS ? divergenceReason(card, statement, txs, categories) : null,
+    divergence: statement.bankTotalCents !== null && !statement.paidEarly && Math.abs(statement.bankTotalCents - statement.computedCents) > DIVERGENCE_CENTS ? divergenceReason(card, statement, txs, categories) : null,
   };
 }

@@ -99,7 +99,8 @@ export function divergenceReason(card: CardInfo, st: CardStatement, txs: FinTx[]
 
 export function divergences(card: CardInfo, txs: FinTx[], categories: FinCategory[], today: string): Divergence[] {
   return cardStatements(card, txs, categories, today, BILLS_CHECKED)
-    .filter((st) => st.bankTotalCents !== null && Math.abs(st.bankTotalCents - st.computedCents) > RECONCILE_TOLERANCE_CENTS)
+    // A bill the bank shows as the balance left after an early payment is not a divergence (cards.ts, earlyPayment).
+    .filter((st) => st.bankTotalCents !== null && !st.paidEarly && Math.abs(st.bankTotalCents - st.computedCents) > RECONCILE_TOLERANCE_CENTS)
     .map((st) => ({ dueDate: st.dueDate, billRef: st.billRef, closing: st.closing, bankCents: st.bankTotalCents!, computedCents: st.computedCents, ...divergenceReason(card, st, txs, categories), solver: summarize(solveBill(card, st, txs, categories, today)) }));
 }
 

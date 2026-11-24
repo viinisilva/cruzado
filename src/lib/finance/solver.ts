@@ -33,7 +33,8 @@ export function candidates(card: CardInfo, st: CardStatement, txs: FinTx[], cate
   const cats = new Map(categories.map((c) => [c.id, c]));
   const counted = statementEntries(card, st, txs, categories);
   const countedIds = new Set(counted.map((t) => t.id));
-  const mine = applyFilters(txs, null, { accountIds: [card.accountId] }).filter((t) => t.categorySource !== "user");
+  // A prevista is not a bank entry: nothing to change on it (the person can exclude it in Conferir).
+  const mine = applyFilters(txs, null, { accountIds: [card.accountId] }).filter((t) => t.categorySource !== "user" && !t.projected);
   const inCycle = (t: FinTx) => (t.billRef ? t.billRef === st.billRef : t.date >= st.cycle.from && t.date <= st.cycle.to);
   const out: Candidate[] = [];
   for (const t of mine) {
@@ -86,7 +87,8 @@ export function combos(list: Candidate[], gap: number): Candidate[][] {
 }
 
 export function solveBill(card: CardInfo, st: CardStatement, txs: FinTx[], categories: FinCategory[], today: string): SolverResult {
-  if (st.bankTotalCents === null) return { outcome: "matched" };
+  // No bank total, or the bank shows the balance left after an early payment (cards.ts, earlyPayment): nothing to close.
+  if (st.bankTotalCents === null || st.paidEarly) return { outcome: "matched" };
   const gap = st.bankTotalCents - st.computedCents;
   if (Math.abs(gap) <= RECONCILE_TOLERANCE_CENTS) return { outcome: "matched" };
   const found = combos(candidates(card, st, txs, categories, today), gap);

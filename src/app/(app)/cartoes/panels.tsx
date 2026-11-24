@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { initials } from "@/lib/banks";
 import { formatDateBR, formatDayMonth, formatMonthYear, monthName, type DateRange } from "@/lib/dates";
-import { closingText, type CardOverview, type CardStatement, type InstallmentPlan, type MonthInstallment } from "@/lib/finance/cards";
+import { closingText, PROJECTION_MATCH_CENTS, type CardOverview, type CardStatement, type InstallmentPlan, type MonthInstallment } from "@/lib/finance/cards";
 import { formatBRL, sumCents } from "@/lib/money";
 import { plural, sanitizeUntrusted } from "@/lib/text";
 import { txHref } from "@/lib/tx-query";
@@ -87,9 +87,36 @@ function StatementRow({ s, today }: { s: CardStatement; today: string }) {
           {s.minimumCents !== null ? <> Pagamento mínimo: <Sensitive>{formatBRL(s.minimumCents)}</Sensitive>.</> : null}
         </p>
       ) : null}
-      {s.bankTotalCents !== null && Math.abs(s.bankTotalCents - s.computedCents) >= 100 ? (
+      {s.projected.count > 0 ? (
         <p className="mt-1 text-sm text-muted">
-          Os lançamentos compartilhados somam <Sensitive>{formatBRL(s.computedCents)}</Sensitive>. A diferença de <Sensitive>{formatBRL(Math.abs(s.bankTotalCents - s.computedCents))}</Sensitive> pode ser juros, tarifas, saldo anterior ou lançamentos que o banco não enviou.
+          Inclui <Sensitive>{formatBRL(s.projected.cents)}</Sensitive> em {s.projected.count === 1 ? "parcela prevista" : "parcelas previstas"}: {s.projected.count === 1 ? "parcela" : "parcelas"} de compra anterior que o banco não enviou.
+          {s.bankTotalCents !== null && Math.abs(s.bankTotalCents - s.computedCents) <= PROJECTION_MATCH_CENTS
+            ? s.bankTotalCents === s.computedCents
+              ? " Com elas, a soma bate com o valor do banco."
+              : <> Com {s.projected.count === 1 ? "ela" : "elas"}, a soma fica a <Sensitive>{formatBRL(Math.abs(s.bankTotalCents - s.computedCents))}</Sensitive> do valor do banco: arredondamento de centavos entre as parcelas.</>
+            : null}
+        </p>
+      ) : null}
+      {s.bankTotalCents !== null && !s.paidEarly && Math.abs(s.bankTotalCents - s.computedCents) >= 100 ? (
+        <p className="mt-1 text-sm text-muted">
+          Os lançamentos compartilhados somam <Sensitive>{formatBRL(s.computedCents)}</Sensitive>.{" "}
+          {s.gapCandidate ? (
+            <>
+              {s.gapCandidate.kind === "earlier-purchase" ? (
+                <>
+                  A diferença de <Sensitive>{formatBRL(Math.abs(s.bankTotalCents - s.computedCents))}</Sensitive> pode ser uma parcela de compra anterior que o banco não enviou: <span className="font-medium text-text">{s.gapCandidate.description}</span>, <Sensitive>{formatBRL(s.gapCandidate.amountCents)}</Sensitive> em {s.gapCandidate.date.slice(8, 10)}/{s.gapCandidate.date.slice(5, 7)}.
+                </>
+              ) : (
+                <>
+                  A diferença de <Sensitive>{formatBRL(Math.abs(s.bankTotalCents - s.computedCents))}</Sensitive> é exatamente {s.gapCandidate.installment ? "a parcela" : "o lançamento"} <span className="font-medium text-text">{s.gapCandidate.description}</span>, de {s.gapCandidate.date.slice(8, 10)}/{s.gapCandidate.date.slice(5, 7)}, que ficou fora desta fatura.
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              A diferença de <Sensitive>{formatBRL(Math.abs(s.bankTotalCents - s.computedCents))}</Sensitive> pode ser juros, tarifas, saldo anterior ou lançamentos que o banco não enviou.
+            </>
+          )}
         </p>
       ) : null}
       {s.status === "open" ? <p className="mt-1 text-sm text-muted">Fecha {closingText(s)}. Novas compras ainda entram.</p> : null}

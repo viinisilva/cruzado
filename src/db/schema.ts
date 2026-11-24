@@ -144,6 +144,8 @@ export const creditCards = pgTable("credit_cards", {
   billsFetchedAt: ts("bills_fetched_at"),
   // Learned from the bank's bills and entries at the end of each sync: closing-day rule, closing/due gap, divergences.
   calibration: jsonb("calibration").$type<CardCalibration>(),
+  // Keys of the "parcelas previstas" the person excluded (finance/cards.ts, projectInstallments). Migration 0011.
+  dismissedProjections: jsonb("dismissed_projections").$type<string[]>().notNull().default([]),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
 

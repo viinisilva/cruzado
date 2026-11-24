@@ -2,18 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getDb } from "@/db/client";
 import { requireUser } from "@/lib/auth/session";
-import { listChanges, reconciliationHealth } from "@/lib/card-reconciliation";
+import { changeOrigin, isAmbiguous, listChanges, reconciliationHealth, type ChangeOrigin } from "@/lib/card-reconciliation";
 import { loadAccounts, loadCategories } from "@/lib/data/repo";
 import { formatDateBR } from "@/lib/dates";
 import { formatBRL } from "@/lib/money";
 import { plural } from "@/lib/text";
 import { Button, ButtonLink, Card, EmptyState, Notice, PageHeader } from "@/components/ui";
 import { Sensitive } from "@/components/client";
-import { applyAllAction, applyChangeAction, dismissChangeAction, revertChangeAction } from "@/app/actions/reconciliation";
+import { ApplyAll } from "./apply-all";
+import { applyChangeAction, dismissChangeAction, revertChangeAction } from "@/app/actions/reconciliation";
 
 export const metadata: Metadata = { title: "Conciliação de cartões" };
 
 const link = "font-medium text-primary underline underline-offset-2";
+
+const ORIGIN: Record<ChangeOrigin["origin"], string> = { evidence: "classificação por evidência", reconciler: "conciliação da fatura", suggestion: "sugestão em Conferir fatura" };
+/** Who proposed it, and who applied it: the person (one by one or with "Aplicar todas") or the Cruzado alone. */
+function authorship(c: ChangeOrigin): string {
+  if (c.appliedBy === "system") return `feita sozinha pela ${ORIGIN[c.origin]}`;
+  const how = c.via === "all" ? " com Aplicar todas" : c.via === "single" ? " uma a uma" : "";
+  return c.origin === "suggestion" ? `aplicada por você${how}, a partir de uma ${ORIGIN.suggestion}` : `proposta pela ${ORIGIN[c.origin]}, aplicada por você${how}`;
+}
 
 /**
  * The dry run and its outcome (docs/AUTOCONCILIACAO.md): what the classifier and the reconciler would change in data
@@ -31,6 +40,7 @@ export default async function ReconciliationPage() {
   ]);
   const cat = (id: unknown) => (typeof id === "string" && categories.find((c) => c.id === id)?.name) || "Sem categoria";
   const acc = (id: string) => accounts.find((a) => a.id === id)?.name ?? "Cartão";
+  const bulk = proposed.filter((c) => !isAmbiguous(c));
 
   return (
     <>
@@ -42,11 +52,13 @@ export default async function ReconciliationPage() {
               <h2 id="propostas" className="text-lg font-semibold">Mudanças propostas ({proposed.length})</h2>
               <p className="text-sm text-muted">Relatório sobre dados antigos: nada aqui foi aplicado. Cada uma pode ser aplicada ou descartada.</p>
             </div>
-            {proposed.length ? (
-              <form action={applyAllAction}>
-                <Button type="submit">Aplicar {plural(proposed.length, "mudança", "mudanças")}</Button>
-              </form>
-            ) : null}
+            <div className="flex flex-wrap gap-2">
+              {/* A file to review calmly or send: every proposal, its evidence and its effect on the bills. Changes nothing. */}
+              <a href="/cartoes/conciliacao/relatorio" download className="inline-flex min-h-11 items-center rounded-xl border border-border-strong bg-surface px-4 text-sm font-semibold hover:bg-surface-2">
+                Baixar relatório
+              </a>
+              {bulk.length ? <ApplyAll count={bulk.length} /> : null}
+            </div>
           </div>
           {proposed.length ? (
             <ul className="mt-3 divide-y divide-border">
@@ -57,6 +69,7 @@ export default async function ReconciliationPage() {
                     <p className="text-sm text-muted">{formatDateBR(c.date)} · {acc(c.accountId)} · <Sensitive>{formatBRL(Math.abs(c.amountCents))}</Sensitive></p>
                     <p className="text-sm">{cat(c.before.categoryId)} → <strong className="font-semibold">{cat(c.after.categoryId)}</strong></p>
                     <p className="text-sm text-muted">{c.reason}</p>
+                    {isAmbiguous(c) ? <p className="text-sm font-medium text-attention">Ambígua: a evidência não decidiu. Fica fora de “Aplicar todas”; confira e aplique só se fizer sentido.</p> : null}
                   </div>
                   <div className="flex gap-2">
                     <form action={applyChangeAction}><input type="hidden" name="id" value={c.id} /><Button type="submit" size="sm">Aplicar</Button></form>
@@ -79,7 +92,7 @@ export default async function ReconciliationPage() {
                 <li key={c.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <Link href={`/transacoes/${c.txId}`} className={link}>{c.description}</Link>
-                    <p className="text-sm text-muted">{formatDateBR(c.date)} · {acc(c.accountId)} · <Sensitive>{formatBRL(Math.abs(c.amountCents))}</Sensitive> · {c.source === "user" ? "por você" : "automática"}</p>
+                    <p className="text-sm text-muted">{formatDateBR(c.date)} · {acc(c.accountId)} · <Sensitive>{formatBRL(Math.abs(c.amountCents))}</Sensitive> · {authorship(changeOrigin(c))}</p>
                     <p className="text-sm">{cat(c.before.categoryId)} → <strong className="font-semibold">{cat(c.after.categoryId)}</strong></p>
                     <p className="text-sm text-muted">{c.reason}</p>
                   </div>

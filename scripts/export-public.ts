@@ -38,6 +38,7 @@ export const EXCLUDED = [
   "docs/DEPLOY_*",
   "docs/AUTOCONCILIACAO.md",
   "docs/CALIBRACAO_CARTAO.md",
+  "docs/BANCOS_*",
   // Lock file of the developer's Claude Code skills: says nothing about the app.
   "skills-lock.json",
   // Security review with open risks and pending manual steps, and the plan for guests with its pending items.
@@ -49,6 +50,7 @@ export const EXCLUDED = [
   "tests/unit/card-calibration.test.ts",
   "tests/unit/card-check.test.ts",
   "tests/unit/classify.test.ts",
+  "tests/unit/reconciliation-report-elo.test.ts",
 ];
 
 export function isExcluded(file: string): boolean {
@@ -90,11 +92,12 @@ const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 /**
- * Spellings of one amount: 1.021,57 · 1021,57 · 1021.57 · 102157 (cents). Only amounts with centavos are checked:
+ * Spellings of one amount: 1.021,57 · 1021,57 · 1021.57 · 102157 (cents). Only amounts with centavos, from R$ 10,00 up, are
+ * checked (below that, 9,99 or 4,24 are common prices and look like version numbers such as 4.24.0):
  * round ones (R$ 100, R$ 5.000) show up in every example and identify no one, while 47,93 does.
  */
 export function amountPatterns(cents: number): RegExp[] {
-  if (cents % 100 === 0) return [];
+  if (cents % 100 === 0 || Math.abs(cents) < 1000) return [];
   const reais = Math.floor(cents / 100);
   const cc = String(cents % 100).padStart(2, "0");
   const forms = [`${thousands(reais)},${cc}`, `${reais},${cc}`, `${reais}.${cc}`];

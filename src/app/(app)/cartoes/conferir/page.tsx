@@ -8,12 +8,12 @@ import { cardHref, parseCardMonth } from "@/lib/card-query";
 import { loadAccounts, loadCards, loadCategories, loadTransactions } from "@/lib/data/repo";
 import { formatDateBR, formatDayMonth, formatMonthYear, todayInSaoPaulo } from "@/lib/dates";
 import { checkStatement, type CheckFlag, type CheckRow, type ExcludedReason, type IncludedReason } from "@/lib/finance/card-check";
-import { cardStatements, closingText, installmentLabel, nextStatement } from "@/lib/finance/cards";
+import { cardStatements, closingText, installmentLabel, nextStatement, PROJECTION_MATCH_CENTS } from "@/lib/finance/cards";
 import type { Confidence, DivergenceReason } from "@/lib/finance/cycles";
 import { formatBRL } from "@/lib/money";
 import { plural } from "@/lib/text";
 import { Badge, Button, ButtonLink, Card, EmptyState, Notice, PageHeader } from "@/components/ui";
-import { applySuggestionAction } from "@/app/actions/reconciliation";
+import { applySuggestionAction, dismissProjectionAction, restoreProjectionsAction } from "@/app/actions/reconciliation";
 import type { CreditKind } from "@/lib/finance/classify";
 import type { CandidateChange, SolverResult } from "@/lib/finance/solver";
 import { Sensitive } from "@/components/client";
@@ -31,6 +31,8 @@ const REASON: Record<IncludedReason | ExcludedReason, string> = {
   "not-charged": "Não cobrado pelo banco: estava pendente e o banco fechou esta fatura sem ele. Continua guardado, só não soma.",
   late: "Fora: pendente nos últimos dias antes do fechamento, e o banco fechou esta fatura sem ele. Conta na fatura seguinte.",
   carried: "Veio da fatura anterior: estava pendente perto do fechamento e o banco não o cobrou lá.",
+  "purchase-date": "Parcela que o banco manda com a data da compra: entra nesta fatura pela numeração.",
+  projected: "O banco mandou a parcela anterior desta compra, mas não esta. Ela entra na soma com o valor da parcela recebida e some sozinha quando o banco a enviar.",
 };
 const FLAG: Record<CheckFlag, { label: string; tone: "attention" | "info" | "risk" }> = {
   pending: { label: "Pendente no banco", tone: "info" },
@@ -112,7 +114,7 @@ function SolverNotice({ solver, rows }: { solver: SolverResult; rows: CheckRow[]
 /** Reasons that are simply how a bill works: not repeated on every row. */
 const USUAL = new Set<IncludedReason | ExcludedReason>(["date", "bill"]);
 
-function Rows({ rows, reason, empty, open }: { rows: (CheckRow & { reason?: IncludedReason | ExcludedReason })[]; reason: boolean; empty: string; open?: boolean }) {
+function Rows({ rows, reason, empty, open, accountId }: { rows: (CheckRow & { reason?: IncludedReason | ExcludedReason })[]; reason: boolean; empty: string; open?: boolean; accountId?: string }) {
   if (!rows.length) return <p className="text-sm text-muted">{empty}</p>;
   return (
     <ul className="divide-y divide-border">
@@ -120,16 +122,36 @@ function Rows({ rows, reason, empty, open }: { rows: (CheckRow & { reason?: Incl
         <li key={r.id} className="py-3 first:pt-0 last:pb-0">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <Link href={`/transacoes/${r.id}`} className="break-words text-[0.9375rem] font-medium hover:underline">
-                {r.installment ? installmentLabel(r.description) : r.description}
-                {r.installment ? <span className="text-muted"> · parcela {r.installment}</span> : null}
-              </Link>
+              {r.projected ? (
+                // Not a bank entry: there is no page to open, only the label and the way to exclude it.
+                <p className="break-words text-[0.9375rem] font-medium">
+                  {r.installment ? installmentLabel(r.description) : r.description}
+                  {r.installment ? <span className="text-muted"> · parcela {r.installment}</span> : null}
+                </p>
+              ) : (
+                <Link href={`/transacoes/${r.id}`} className="break-words text-[0.9375rem] font-medium hover:underline">
+                  {r.installment ? installmentLabel(r.description) : r.description}
+                  {r.installment ? <span className="text-muted"> · parcela {r.installment}</span> : null}
+                </Link>
+              )}
               <p className="text-sm text-muted">{formatDateBR(r.date)} · {r.categoryName}</p>
             </div>
             <p className="shrink-0 text-[0.9375rem] font-semibold tabular-nums">
               <Sensitive>{r.amountCents > 0 ? `− ${formatBRL(r.amountCents)}` : formatBRL(-r.amountCents)}</Sensitive>
             </p>
           </div>
+          {r.projected ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <Badge tone="attention">Parcela prevista — o banco não enviou</Badge>
+              {accountId && r.projectionKey ? (
+                <form action={dismissProjectionAction}>
+                  <input type="hidden" name="account" value={accountId} />
+                  <input type="hidden" name="key" value={r.projectionKey} />
+                  <Button type="submit" size="sm" variant="secondary">Excluir prevista</Button>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
           {reason && r.reason && !USUAL.has(r.reason) ? <p className="mt-1 text-sm text-muted">{REASON[r.reason]}</p> : null}
           {r.decision ? (
             <p className="mt-1 text-sm text-muted">
@@ -184,7 +206,8 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
     );
   }
   const st = check.statement;
-  const gap = st.bankTotalCents !== null ? st.bankTotalCents - st.computedCents : null;
+  // Paid early, the bank shows the balance left: the bill's value is the sum of its entries, and nothing diverges.
+  const gap = st.paidEarly ? 0 : st.bankTotalCents !== null ? st.bankTotalCents - st.computedCents : null;
   const monthName = formatMonthYear(`${month}-01`);
   const money = (c: number) => <Sensitive>{formatBRL(c)}</Sensitive>;
   const summary =
@@ -192,6 +215,10 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
       <>Até agora, a fatura de {monthName} soma <strong>{money(st.computedCents)}</strong>. Ela ainda está aberta: {st.closingSource === "fixed" ? `fecha no dia ${check.closingDay}` : `fecha ${closingText(st)}`} e vence em {formatDayMonth(st.dueDate, today)}. O total pode mudar até o fechamento.</>
     ) : st.bankTotalCents === null ? (
       <>A fatura de {monthName} fechou em <strong>{money(st.computedCents)}</strong>, pela soma dos lançamentos. O banco não informou o total desta fatura.</>
+    ) : st.paidEarly ? (
+      <>A fatura de {monthName} fechou em <strong>{money(st.computedCents)}</strong> e foi paga antecipadamente em {short(st.paidEarly.date)}. Por isso o banco mostra só o saldo que falta pagar, <strong>{money(st.bankTotalCents)}</strong>.</>
+    ) : st.projected.count > 0 && Math.abs(gap!) <= PROJECTION_MATCH_CENTS ? (
+      <>A fatura de {monthName} fechou em <strong>{money(st.bankTotalCents)}</strong>, segundo o banco. A soma dá <strong>{money(st.computedCents)}</strong> contando {st.projected.count === 1 ? "uma parcela prevista" : `${st.projected.count} parcelas previstas`} ({money(st.projected.cents)}) que o banco não enviou{gap === 0 ? ", e bate com o banco." : <>. A diferença de {money(Math.abs(gap!))} é arredondamento de centavos entre as parcelas, não juros nem tarifas.</>}</>
     ) : gap === 0 ? (
       <>A fatura de {monthName} fechou em <strong>{money(st.computedCents)}</strong>, o mesmo valor que o banco informou.</>
     ) : (
@@ -208,7 +235,7 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
               <h2 id="resumo" className="text-lg font-semibold first-letter:uppercase">Fatura de {formatMonthYear(`${month}-01`)}</h2>
               <p className="text-sm text-muted">Compras de {short(st.cycle.from)} a {short(st.cycle.to)} · {st.dueDate < today ? "venceu" : "vence"} em {formatDayMonth(st.dueDate, today)}</p>
             </div>
-            {st.status === "open" ? <Badge tone="attention">Aberta</Badge> : gap === 0 ? <Badge tone="positive">Bate com o banco</Badge> : <Badge>Fechada</Badge>}
+            {st.status === "open" ? <Badge tone="attention">Aberta</Badge> : st.paidEarly ? <Badge tone="positive">Paga antecipadamente</Badge> : gap === 0 || (st.projected.count > 0 && Math.abs(gap!) <= PROJECTION_MATCH_CENTS) ? <Badge tone="positive">Bate com o banco</Badge> : <Badge>Fechada</Badge>}
           </div>
           <p className="mt-3 max-w-prose text-base leading-relaxed">{summary}</p>
           <dl className="mt-4 grid gap-2 text-[0.9375rem] sm:max-w-md">
@@ -217,8 +244,12 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
             <div className="flex justify-between gap-3 border-t border-border pt-2 font-semibold"><dt>Soma dos lançamentos</dt><dd className="tabular-nums"><Sensitive>{formatBRL(st.computedCents)}</Sensitive></dd></div>
             {st.bankTotalCents !== null ? (
               <>
-                <div className="flex justify-between gap-3 font-semibold"><dt>Valor informado pelo banco</dt><dd className="tabular-nums"><Sensitive>{formatBRL(st.bankTotalCents)}</Sensitive></dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-muted">Diferença</dt><dd className="tabular-nums"><Sensitive>{formatBRL(gap!)}</Sensitive></dd></div>
+                <div className="flex justify-between gap-3 font-semibold"><dt>{st.paidEarly ? "Saldo informado pelo banco" : "Valor informado pelo banco"}</dt><dd className="tabular-nums"><Sensitive>{formatBRL(st.bankTotalCents)}</Sensitive></dd></div>
+                {st.paidEarly ? (
+                  <div className="flex justify-between gap-3"><dt className="text-muted">Pago antecipadamente em {short(st.paidEarly.date)}</dt><dd className="tabular-nums"><Sensitive>{formatBRL(st.paidEarly.cents)}</Sensitive></dd></div>
+                ) : (
+                  <div className="flex justify-between gap-3"><dt className="text-muted">Diferença</dt><dd className="tabular-nums"><Sensitive>{formatBRL(gap!)}</Sensitive></dd></div>
+                )}
               </>
             ) : null}
           </dl>
@@ -256,7 +287,19 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
 
         {check.divergence ? (
           <Notice tone="attention" title="Motivo provável da diferença">
-            {DIVERGENCE[check.divergence.reason](<Sensitive>{formatBRL(check.divergence.amountCents)}</Sensitive>)}
+            {st.gapCandidate?.kind === "earlier-purchase" ? (
+              <>
+                Possível parcela de compra anterior que o banco não enviou:{" "}
+                <Link href={`/transacoes/${st.gapCandidate.id}`} className={link}>{st.gapCandidate.description}</Link>, <Sensitive>{formatBRL(st.gapCandidate.amountCents)}</Sensitive> em {short(st.gapCandidate.date)}. Ela tem o valor que falta, e o comerciante não aparece nesta fatura. Confira no app do banco se esta fatura cobra uma parcela dessa compra.
+              </>
+            ) : st.gapCandidate ? (
+              <>
+                A diferença é exatamente {st.gapCandidate.installment ? "a parcela" : "o lançamento"}{" "}
+                <Link href={`/transacoes/${st.gapCandidate.id}`} className={link}>{st.gapCandidate.description}</Link>, de {short(st.gapCandidate.date)} (<Sensitive>{formatBRL(st.gapCandidate.amountCents)}</Sensitive>), que ficou fora desta fatura. O banco provavelmente a cobrou aqui.
+              </>
+            ) : (
+              DIVERGENCE[check.divergence.reason](<Sensitive>{formatBRL(check.divergence.amountCents)}</Sensitive>)
+            )}
           </Notice>
         ) : null}
         <SolverNotice solver={check.solver} rows={[...check.included, ...check.excluded, ...check.nearby]} />
@@ -269,7 +312,14 @@ export default async function CheckStatementPage({ searchParams }: { searchParam
 
         <Card aria-labelledby="entram">
           <h2 id="entram" className="mb-3 text-lg font-semibold">Entram na fatura ({check.included.length})</h2>
-          <Rows rows={check.included} reason open={st.status === "open"} empty="Nenhum lançamento nesta fatura." />
+          <Rows rows={check.included} reason open={st.status === "open"} accountId={account.id} empty="Nenhum lançamento nesta fatura." />
+          {card.dismissedProjections?.length ? (
+            <form action={restoreProjectionsAction} className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+              <input type="hidden" name="account" value={account.id} />
+              {plural(card.dismissedProjections.length, "parcela prevista excluída", "parcelas previstas excluídas")} por você neste cartão.
+              <Button type="submit" size="sm" variant="secondary">Voltar a contar</Button>
+            </form>
+          ) : null}
         </Card>
 
         {check.excluded.length ? (

@@ -17,6 +17,7 @@
 | Agentes, execuções, alertas | Agentes proativos | Até a exclusão |
 | Conversas do chat (texto + evidência) | Histórico do usuário | Até a exclusão da conta |
 | Eventos de auditoria (sem conteúdo financeiro) | Segurança | Anonimizados na exclusão da conta |
+| Origem de cada login e tentativa de login: tipo de dispositivo, navegador e sistema (lidos do user agent, que não é guardado) e a rede do IP truncada (IPv4 /16, IPv6 /48; o IP completo não é guardado) | Segurança: perceber um login estranho | Junto com os eventos de auditoria |
 | Consentimento de IA externa (data) | Base para envio ao provedor | Até revogação |
 | Tokens MCP (SHA-256, prefixo) | Acesso de clientes MCP | Até revogação/exclusão |
 

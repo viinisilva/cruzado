@@ -4,7 +4,7 @@ import type { DB } from "@/db/connection";
 import * as s from "@/db/schema";
 import { todayInSaoPaulo, type DateRange } from "../dates";
 import type { CardInfo, FinAccount, FinCategory, FinTx } from "../finance/core";
-import { stripAccents } from "../text";
+import { parseInstallment, stripAccents } from "../text";
 import { PAGE_SIZE, UNCATEGORIZED_FILTER, type TxOrigin, type TxQuery } from "../tx-query";
 
 export async function loadAccounts(db: DB, userId: string): Promise<(FinAccount & { archived: boolean })[]> {
@@ -49,6 +49,7 @@ export async function loadCards(db: DB, userId: string): Promise<CardInfo[]> {
     calibration: r.calibration?.version === 1 ? r.calibration : null,
     // Cards typed by hand have no bank to ask; for them this stays undefined.
     billsChecked: r.bankDataAt ? r.billsFetchedAt !== null : undefined,
+    dismissedProjections: Array.isArray(r.dismissedProjections) ? r.dismissedProjections : [],
     bills: bills.filter((b) => b.accountId === r.accountId).map((b) => ({ billRef: b.billRef, dueDate: b.dueDate, closingDate: b.closingDate, totalCents: b.totalCents, minimumCents: b.minimumCents, payments: b.payments })),
   }));
 }
@@ -138,6 +139,8 @@ export async function searchTransactions(db: DB, userId: string, q: TxQuery, cat
 }
 
 export function toFinTx(r: typeof s.transactions.$inferSelect): FinTx {
+  // Rows stored by an older reader may lack the numbers ("MERCADO02/04"): read them from the bank's text, without writing.
+  const parsed = r.installmentNumber ? null : parseInstallment(r.providerDescription ?? r.description);
   return {
     id: r.id,
     accountId: r.accountId,
@@ -146,8 +149,8 @@ export function toFinTx(r: typeof s.transactions.$inferSelect): FinTx {
     description: r.description,
     merchant: r.merchant,
     amountCents: r.amountCents,
-    installmentNumber: r.installmentNumber,
-    installmentTotal: r.installmentTotal,
+    installmentNumber: r.installmentNumber ?? parsed?.number ?? null,
+    installmentTotal: r.installmentTotal ?? parsed?.total ?? null,
     bankStatus: r.bankStatus,
     billRef: r.billRef,
     operationType: r.operationType,

@@ -9,7 +9,7 @@ import { canAddAccountsManually } from "@/lib/connectors/pluggy";
 import { loadAccounts, loadCards, loadCategories, loadTransactions } from "@/lib/data/repo";
 import { addMonths, todayInSaoPaulo } from "@/lib/dates";
 import { accountBalances } from "@/lib/finance/core";
-import { cardOverviews, installmentsInMonth, statementForMonth, type CardOverview } from "@/lib/finance/cards";
+import { cardOverviews, installmentsInMonth, statementForMonth, withChargeDates, type CardOverview } from "@/lib/finance/cards";
 import { plural } from "@/lib/text";
 import { ButtonLink, ChipLink, EmptyState, Notice, PageHeader, cx } from "@/components/ui";
 import { InstallmentsPanel, LimitsPanel, StatementsPanel } from "./panels";
@@ -27,7 +27,7 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const db = await getDb();
   const today = todayInSaoPaulo();
-  const [accounts, categories, txs, cards, links, [proposals]] = await Promise.all([
+  const [accounts, categories, stored, cards, links, [proposals]] = await Promise.all([
     loadAccounts(db, user.id),
     loadCategories(db, user.id),
     loadTransactions(db, user.id, { includeFuture: true, today }),
@@ -40,8 +40,10 @@ export default async function CardsPage({ searchParams }: { searchParams: Promis
       .where(and(eq(s.accounts.userId, user.id), eq(s.financialConnections.connector, "open_finance"))),
     db.select({ n: count() }).from(s.reconciliationChanges).where(and(eq(s.reconciliationChanges.userId, user.id), eq(s.reconciliationChanges.status, "proposed"))),
   ]);
+  // Installments some banks send with the purchase date are placed by their numbering (cards.ts, chargeDated).
+  const txs = withChargeDates(cards, stored, today);
   // A card from a bank whose first sync has not finished has no cycle yet: it is being calibrated, nothing to ask.
-  const overviews = cardOverviews(accountBalances(accounts, txs, today), cards, txs, categories, today).map((o) =>
+  const overviews = cardOverviews(accountBalances(accounts, stored, today), cards, txs, categories, today).map((o) =>
     !o.info && links.some((l) => l.account === o.id && l.status !== "disconnected") ? { ...o, calibrating: true } : o,
   );
 

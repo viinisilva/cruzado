@@ -11,6 +11,7 @@ import { addDays, todayInSaoPaulo } from "./dates";
 import { newId } from "./ids";
 import { loadCards, loadCategories, loadTransactions } from "./data/repo";
 import { classifyCardCredits, creditPattern, type Classification, type CreditKind, type LearnedSignal } from "./finance/classify";
+import { cardView } from "./finance/cards";
 import type { CardCalibration, Divergence } from "./finance/cycles";
 import type { FinCategory, FinTx } from "./finance/core";
 
@@ -201,8 +202,12 @@ export async function logMatched(db: DB, userId: string, institution: string, bi
   for (const m of billMonths) await logEvent(db, userId, institution, { dueDate: `${m}-01`, bankCents: 0, computedCents: 0, reason: "missing-entries", amountCents: 0 }, "matched");
 }
 
-/** The person applies a proposal: the category becomes theirs. */
-export async function applyChange(db: DB, userId: string, changeId: string) {
+/**
+ * The person applies a proposal: the category becomes theirs. The change keeps who proposed it (`source`: the
+ * classifier or the reconciler) and records who applied it and how (`after.appliedBy`, `after.via`): one click on
+ * "Aplicar" or "Aplicar todas".
+ */
+export async function applyChange(db: DB, userId: string, changeId: string, via: "single" | "all" = "single") {
   const [c] = await db.select().from(s.reconciliationChanges).where(and(eq(s.reconciliationChanges.id, changeId), eq(s.reconciliationChanges.userId, userId)));
   if (!c || c.status !== "proposed") return false;
   // A proposal is only valid for the state it was made from: if the person chose a category since, or the entry moved,
@@ -214,19 +219,48 @@ export async function applyChange(db: DB, userId: string, changeId: string) {
   }
   await db.transaction(async (tx) => {
     await tx.update(s.transactions).set({ categoryId: (c.after as { categoryId: string }).categoryId, categorySource: "user" }).where(and(eq(s.transactions.id, c.transactionId), eq(s.transactions.userId, userId)));
-    await tx.update(s.reconciliationChanges).set({ status: "applied", source: "user", appliedAt: new Date() }).where(eq(s.reconciliationChanges.id, c.id));
+    await tx.update(s.reconciliationChanges).set({ status: "applied", after: { ...(c.after as Record<string, unknown>), appliedBy: "user", via }, appliedAt: new Date() }).where(eq(s.reconciliationChanges.id, c.id));
   });
   return true;
 }
 
-export async function applyAllProposals(db: DB, userId: string) {
-  const rows = await db.select({ id: s.reconciliationChanges.id }).from(s.reconciliationChanges).where(and(eq(s.reconciliationChanges.userId, userId), eq(s.reconciliationChanges.status, "proposed")));
-  for (const r of rows) await applyChange(db, userId, r.id);
-  return rows.length;
+/** A proposal whose evidence pointed nowhere: it may be applied one by one, after a look, never in bulk. */
+export const isAmbiguous = (c: { reason: string; after: unknown }) => (c.after as { kind?: string }).kind === "unknown" || c.reason.endsWith(": ambiguous");
+
+/**
+ * "Aplicar todas": every proposal except the ambiguous ones, which stay for one-by-one review. With `expected` (the
+ * count the person confirmed on screen), nothing is applied unless it is still exactly that many: a stale page or a
+ * repeated submit changes nothing.
+ */
+export async function applyAllProposals(db: DB, userId: string, opts: { expected?: number } = {}) {
+  const rows = await db.select({ id: s.reconciliationChanges.id, reason: s.reconciliationChanges.reason, after: s.reconciliationChanges.after }).from(s.reconciliationChanges).where(and(eq(s.reconciliationChanges.userId, userId), eq(s.reconciliationChanges.status, "proposed")));
+  const bulk = rows.filter((r) => !isAmbiguous(r));
+  if (opts.expected !== undefined && opts.expected !== bulk.length) return 0;
+  let applied = 0;
+  for (const r of bulk) if (await applyChange(db, userId, r.id, "all")) applied++;
+  return applied;
 }
 
-export async function dismissChange(db: DB, userId: string, changeId: string) {
-  await db.update(s.reconciliationChanges).set({ status: "dismissed" }).where(and(eq(s.reconciliationChanges.id, changeId), eq(s.reconciliationChanges.userId, userId), eq(s.reconciliationChanges.status, "proposed")));
+export type ChangeOrigin = { origin: "evidence" | "reconciler" | "suggestion"; appliedBy: "user" | "system"; via: "single" | "all" | null };
+
+/**
+ * Who proposed a change and who applied it. Changes applied before this was recorded have `source = "user"` and lost
+ * their origin; it is read back from the reason they were proposed with, which the code always wrote.
+ */
+export function changeOrigin(c: { source: string; status: string; reason: string; after: unknown }): ChangeOrigin {
+  const after = c.after as { appliedBy?: string; via?: "single" | "all" };
+  const fromReason = (): ChangeOrigin["origin"] => (c.reason.startsWith("classificação:") ? "evidence" : c.reason.startsWith("fatura de") ? "reconciler" : "suggestion");
+  const origin = c.source === "user" ? fromReason() : (c.source as ChangeOrigin["origin"]);
+  const appliedBy = after.appliedBy === "user" || c.source === "user" ? "user" : "system";
+  return { origin, appliedBy, via: after.via ?? null };
+}
+
+/** The person dismisses a proposal: recorded as theirs (after.dismissedBy), so it is never mistaken for an automatic retirement. */
+export async function dismissChange(db: DB, userId: string, changeId: string): Promise<boolean> {
+  const [c] = await db.select({ after: s.reconciliationChanges.after }).from(s.reconciliationChanges).where(and(eq(s.reconciliationChanges.id, changeId), eq(s.reconciliationChanges.userId, userId), eq(s.reconciliationChanges.status, "proposed")));
+  if (!c) return false;
+  await db.update(s.reconciliationChanges).set({ status: "dismissed", after: { ...(c.after as Record<string, unknown>), dismissedBy: "user" } }).where(eq(s.reconciliationChanges.id, changeId));
+  return true;
 }
 
 /**
@@ -298,5 +332,30 @@ export async function applySuggestion(db: DB, userId: string, txId: string, chan
     // A proposal for the same entry is settled by this decision.
     await tx.update(s.reconciliationChanges).set({ status: "dismissed" }).where(and(eq(s.reconciliationChanges.transactionId, txId), eq(s.reconciliationChanges.status, "proposed")));
   });
+  return true;
+}
+
+/**
+ * The person excludes a "parcela prevista" (finance/cards.ts, projectInstallments): its key is stored on their card and
+ * it is never projected again. Only a key that is a prevista of this person's card today is accepted, so nothing else
+ * can be written here. False when refused or already excluded.
+ */
+export async function dismissProjection(db: DB, userId: string, accountId: string, key: string, today = todayInSaoPaulo()): Promise<boolean> {
+  const [cards, txs] = await Promise.all([loadCards(db, userId), loadTransactions(db, userId, { includeFuture: true, accountIds: [accountId] })]);
+  const card = cards.find((c) => c.accountId === accountId);
+  if (!card || card.dismissedProjections?.includes(key)) return false;
+  if (!cardView(card, txs, today).some((t) => t.projected && t.projectionKey === key)) return false;
+  await db
+    .update(s.creditCards)
+    .set({ dismissedProjections: [...(card.dismissedProjections ?? []), key] })
+    .where(and(eq(s.creditCards.userId, userId), eq(s.creditCards.accountId, accountId)));
+  return true;
+}
+
+/** Undoes every exclusion of previstas on this card. False when there was none. */
+export async function restoreProjections(db: DB, userId: string, accountId: string): Promise<boolean> {
+  const card = (await loadCards(db, userId)).find((c) => c.accountId === accountId);
+  if (!card?.dismissedProjections?.length) return false;
+  await db.update(s.creditCards).set({ dismissedProjections: [] }).where(and(eq(s.creditCards.userId, userId), eq(s.creditCards.accountId, accountId)));
   return true;
 }

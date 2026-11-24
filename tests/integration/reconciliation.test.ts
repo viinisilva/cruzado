@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as s from "@/db/schema";
 import { createUser } from "@/lib/auth/users";
-import { applyAllProposals, reconciliationHealth, revertChange } from "@/lib/card-reconciliation";
+import { applyAllProposals, applyChange, changeOrigin, reconciliationHealth, revertChange } from "@/lib/card-reconciliation";
 import { connectItem, syncConnection } from "@/lib/connectors/open-finance";
 import { PluggyClient } from "@/lib/connectors/pluggy";
 import { loadCards, loadCategories, loadTransactions } from "@/lib/data/repo";
@@ -121,7 +121,8 @@ describe("review fixes", () => {
     const { t } = await slugOf("AJUSTE PAGAMENTO");
     const lazer = (await loadCategories(db, userId)).find((c) => c.slug === "lazer")!.id;
     await db.update(s.transactions).set({ categoryId: lazer, categorySource: "user" }).where(eq(s.transactions.id, t.id));
-    expect(await applyAllProposals(db, userId)).toBe(1);
+    // Nothing is applied: the proposal is retired, and the count (which the audit records) says so.
+    expect(await applyAllProposals(db, userId)).toBe(0);
     expect((await slugOf("AJUSTE PAGAMENTO")).slug).toBe("lazer");
     const [change] = await db.select().from(s.reconciliationChanges).where(eq(s.reconciliationChanges.transactionId, t.id));
     expect(change!.status).toBe("dismissed");
@@ -147,3 +148,50 @@ describe("review fixes", () => {
 });
 
 const bill2 = (id: string, closing: string, due: string, total: number, payments: Row[]): Row => ({ id, dueDate: at(due), billClosingDate: at(closing), totalAmount: total, totalAmountCurrencyCode: "BRL", payments });
+
+describe("who proposed and who applied", () => {
+  const ambiguousProposal = async () => {
+    const { t } = await slugOf("COMPRA o1");
+    const cats = await loadCategories(db, userId);
+    const other = cats.find((c) => c.slug === "outras-despesas")!;
+    const [row] = await db
+      .insert(s.reconciliationChanges)
+      .values({ id: "amb-1", userId, accountId: t.accountId, transactionId: t.id, kind: "category", before: { categoryId: t.categoryId, categorySource: null }, after: { categoryId: other.id, kind: "unknown" }, reason: "classificação: ambiguous", source: "evidence", status: "proposed" })
+      .returning();
+    return row!;
+  };
+
+  it("applying keeps the real origin and records that the person applied it, and how", async () => {
+    await connectItem(db, client, userId, ITEM, new Date("2026-11-17T15:00:00Z"));
+    expect(await applyAllProposals(db, userId)).toBe(1);
+    const [c] = await db.select().from(s.reconciliationChanges).where(eq(s.reconciliationChanges.status, "applied"));
+    expect(c).toMatchObject({ source: "reconciler", after: { change: "to-refund", appliedBy: "user", via: "all" } });
+    expect(changeOrigin(c!)).toEqual({ origin: "reconciler", appliedBy: "user", via: "all" });
+  });
+
+  it("'Aplicar todas' leaves ambiguous proposals for one-by-one review; one by one they can be applied", async () => {
+    await connectItem(db, client, userId, ITEM, new Date("2026-11-17T15:00:00Z"));
+    const amb = await ambiguousProposal();
+    expect(await applyAllProposals(db, userId)).toBe(1);
+    expect((await db.select().from(s.reconciliationChanges).where(eq(s.reconciliationChanges.id, amb.id)))[0]).toMatchObject({ status: "proposed" });
+    expect(await applyChange(db, userId, amb.id, "single")).toBe(true);
+    expect((await db.select().from(s.reconciliationChanges).where(eq(s.reconciliationChanges.id, amb.id)))[0]).toMatchObject({ status: "applied", source: "evidence", after: { appliedBy: "user", via: "single" } });
+  });
+
+  it("changes applied before this kept no origin: it is read back from the reason they were proposed with", () => {
+    const old = (reason: string) => changeOrigin({ source: "user", status: "applied", reason, after: { categoryId: "x" } });
+    expect(old("classificação: cashback")).toEqual({ origin: "evidence", appliedBy: "user", via: null });
+    expect(old("fatura de 2026-11 fechou ao centavo com esta mudança")).toEqual({ origin: "reconciler", appliedBy: "user", via: null });
+    expect(old("sugestão aplicada por você em Conferir fatura")).toEqual({ origin: "suggestion", appliedBy: "user", via: null });
+    expect(changeOrigin({ source: "evidence", status: "applied", reason: "classificação: cashback", after: {} })).toEqual({ origin: "evidence", appliedBy: "system", via: null });
+  });
+});
+
+describe("Aplicar todas, confirmed", () => {
+  it("applies only when the confirmed count is the one on screen; a stale page changes nothing", async () => {
+    await connectItem(db, client, userId, ITEM, new Date("2026-11-17T15:00:00Z"));
+    expect(await applyAllProposals(db, userId, { expected: 2 })).toBe(0);
+    expect(await db.select().from(s.reconciliationChanges).where(eq(s.reconciliationChanges.status, "applied"))).toHaveLength(0);
+    expect(await applyAllProposals(db, userId, { expected: 1 })).toBe(1);
+  });
+});

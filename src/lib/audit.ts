@@ -46,6 +46,8 @@ export type AuditAction =
   | "reconciliation.confirmed"
   | "reconciliation.undone"
   | "reconciliation.dismissed"
+  | "reconciliation.projection_dismissed"
+  | "reconciliation.projections_restored"
   | "reconciliation.applied"
   | "reconciliation.applied_all"
   | "reconciliation.reverted"

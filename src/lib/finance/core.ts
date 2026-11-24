@@ -22,6 +22,12 @@ export type FinTx = {
   /** Who set the category; "user" is never changed by any automatic step. */
   categorySource?: CategorySource | null;
   classification?: Classification | null;
+  /** Set by chargeDated (cards.ts): the bank sent this installment with the purchase date, kept here; date is when it is charged. */
+  purchaseDate?: string;
+  /** Set by projectInstallments (cards.ts): an installment the bank never sent, counted as "prevista". Never stored. */
+  projected?: true;
+  /** Stable key of a prevista, what the person's "Excluir" stores (credit_cards.dismissed_projections). */
+  projectionKey?: string;
 };
 
 export type FinCategory = { id: string; name: string; slug: string; kind: "expense" | "income" | "transfer" };
@@ -403,6 +409,8 @@ export type CardInfo = {
   calibration?: CardCalibration | null;
   /** True once the bank's bills were asked for at least once, whatever the answer. */
   billsChecked?: boolean;
+  /** Previstas the person excluded (projectionKey of each): they are never projected again. */
+  dismissedProjections?: string[];
 };
 
 /** Statement cycle that contains `today`: (previous closing day + 1) … closing day. */

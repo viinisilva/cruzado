@@ -26,6 +26,9 @@ export default async function TransactionPage({ params, searchParams }: { params
   const [tx] = await db.select().from(s.transactions).where(and(eq(s.transactions.id, id), eq(s.transactions.userId, user.id)));
   if (!tx) notFound();
   const [accounts, categories] = await Promise.all([loadAccounts(db, user.id), loadCategories(db, user.id)]);
+  // Card entries: the bill the bank tied this entry to, if any. Shown so a gap can be traced without reading the database.
+  const isCard = accounts.find((a) => a.id === tx.accountId)?.type === "credit_card";
+  const [bankBill] = isCard && tx.billRef ? await db.select({ dueDate: s.cardBills.dueDate }).from(s.cardBills).where(and(eq(s.cardBills.accountId, tx.accountId), eq(s.cardBills.billRef, tx.billRef))) : [];
   return (
     <>
       <Link href={back} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm text-primary">
@@ -69,6 +72,12 @@ export default async function TransactionPage({ params, searchParams }: { params
               <>
                 <dt className="text-muted">Situação</dt>
                 <dd>Aguardando o banco</dd>
+              </>
+            ) : null}
+            {isCard && tx.source === "open_finance" ? (
+              <>
+                <dt className="text-muted">Fatura do banco</dt>
+                <dd>{bankBill ? `O banco ligou este lançamento à fatura que vence em ${formatDateBR(bankBill.dueDate)}` : tx.billRef ? "O banco ligou este lançamento a uma fatura que ele ainda não enviou" : "O banco não ligou este lançamento a nenhuma fatura"}</dd>
               </>
             ) : null}
             {tx.providerDescription && tx.providerDescription !== tx.description ? (

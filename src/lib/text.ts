@@ -52,7 +52,8 @@ export function plural(count: number, one: string, many: string): string {
 
 export function parseInstallment(description: string): { number: number; total: number } | null {
   // Only "parc 3/10" or a trailing "3/10": a n/t in the middle of the text is usually a date ("COMPRA 05/12 MERCADO").
-  const m = description.match(/\bparc(?:ela)?\.?\s*(\d{1,2})\s*(?:\/|de)\s*(\d{1,2})\b/i) ?? description.match(/\b(\d{1,2})\s*\/\s*(\d{1,2})\s*$/);
+  // The trailing one may be glued to the name: Bradesco Elo sends "MERCADOLIVRE MERCADO02/04".
+  const m = description.match(/\bparc(?:ela)?\.?\s*(\d{1,2})\s*(?:\/|de)\s*(\d{1,2})\b/i) ?? description.match(/(?<![\d/])(\d{1,2})\s*\/\s*(\d{1,2})\s*$/);
   if (!m) return null;
   const n = Number(m[1]);
   const t = Number(m[2]);
